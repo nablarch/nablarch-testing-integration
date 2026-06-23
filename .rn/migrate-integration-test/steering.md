@@ -5,6 +5,11 @@
 `nablarch-testing`（ブランチ `convert-testdata-excel-to-text`）から integration 対象ファイルを
 本リポジトリへ移動・コピーし、YAMLサブ20クラスすべてが `mvn test` で単独実行緑になる状態にする。
 
+## Rules
+
+- **変更したら必ずプッシュする**（コミット後に `git push` を実行する）
+- PR本文はステアリングへのリンクのみとする（内容の重複を防ぐ）
+
 ## Context
 
 - 移動元: `/home/tie303177/work/nablarch/nablarch-testing`（ブランチ `convert-testdata-excel-to-text`）
