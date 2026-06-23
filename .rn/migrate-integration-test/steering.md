@@ -40,7 +40,7 @@
 - [x] #7 — FileToFileBatchSampleYamlTest 配置・緑確認
 - [x] #8 — SimpleBatchSampleYamlTest 配置・緑確認
 - [x] #9 — DbAccessTestSupportYamlTest 配置・緑確認
-- [ ] #10 — EntityTestSupportYamlTest 配置・緑確認
+- [x] #10 — EntityTestSupportYamlTest 配置・緑確認
 - [ ] #11 — TestBeanYamlTest 配置・緑確認
 - [ ] #12 — TestEntityYamlTest 配置・緑確認
 - [ ] #13 — FileSupportWithDbLessTestDataParserYamlTest 配置・緑確認
@@ -161,7 +161,7 @@
 ## State
 
 <!--
-last_completed: #9
-next_task: #10
+last_completed: #10
+next_task: #11
 notes: (none)
 -->
