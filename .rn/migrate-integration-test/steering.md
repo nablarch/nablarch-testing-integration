@@ -34,7 +34,7 @@
 - [x] #1 — pom.xml 作成
 - [x] #2 — 基盤5件 + 共通設定 + 変換生成データの配置
 - [x] #3 — TestSupportYamlTest 配置・緑確認
-- [ ] #4 — MultiResourceDataSetUpYamlTest 配置・緑確認
+- [x] #4 — MultiResourceDataSetUpYamlTest 配置・緑確認
 - [ ] #5 — BatchRequestTestSupportYamlTest 配置・緑確認
 - [ ] #6 — DBtoDBBatchSampleYamlTest 配置・緑確認
 - [ ] #7 — FileToFileBatchSampleYamlTest 配置・緑確認
@@ -161,7 +161,7 @@
 ## State
 
 <!--
-last_completed: #3
-next_task: #4
+last_completed: #4
+next_task: #5
 notes: (none)
 -->
