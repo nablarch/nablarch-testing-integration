@@ -37,7 +37,7 @@
 - [x] #4 — MultiResourceDataSetUpYamlTest 配置・緑確認
 - [x] #5 — BatchRequestTestSupportYamlTest 配置・緑確認
 - [x] #6 — DBtoDBBatchSampleYamlTest 配置・緑確認
-- [ ] #7 — FileToFileBatchSampleYamlTest 配置・緑確認
+- [x] #7 — FileToFileBatchSampleYamlTest 配置・緑確認
 - [ ] #8 — SimpleBatchSampleYamlTest 配置・緑確認
 - [ ] #9 — DbAccessTestSupportYamlTest 配置・緑確認
 - [ ] #10 — EntityTestSupportYamlTest 配置・緑確認
@@ -161,7 +161,7 @@
 ## State
 
 <!--
-last_completed: #6
-next_task: #7
+last_completed: #7
+next_task: #8
 notes: (none)
 -->
