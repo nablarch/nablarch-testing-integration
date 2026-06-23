@@ -43,8 +43,8 @@
 - [x] #10 — EntityTestSupportYamlTest 配置・緑確認
 - [x] #11 — TestBeanYamlTest 配置・緑確認
 - [x] #12 — TestEntityYamlTest 配置・緑確認
-- [ ] #13 — FileSupportWithDbLessTestDataParserYamlTest 配置・緑確認
-- [ ] #14 — FileSupportYamlTest 配置・緑確認
+- [x] #13 — FileSupportWithDbLessTestDataParserYamlTest 配置・緑確認
+- [x] #14 — FileSupportYamlTest 配置・緑確認
 - [ ] #15 — AbstractHttpRequestTestTemplateTest2YamlTest 配置・緑確認
 - [ ] #16 — AbstractHttpRequestTestTemplateYamlTest 配置・緑確認
 - [ ] #17 — MessagingReceiveTestSupportYamlTest 配置・緑確認
@@ -161,7 +161,7 @@
 ## State
 
 <!--
-last_completed: #12
-next_task: #13
+last_completed: #14
+next_task: #15
 notes: (none)
 -->
