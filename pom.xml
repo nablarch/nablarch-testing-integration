@@ -140,6 +140,13 @@
     </dependency>
 
     <dependency>
+      <groupId>jakarta.servlet</groupId>
+      <artifactId>jakarta.servlet-api</artifactId>
+      <version>6.0.0</version>
+      <scope>test</scope>
+    </dependency>
+
+    <dependency>
       <groupId>com.nablarch.framework</groupId>
       <artifactId>nablarch-fw-messaging</artifactId>
       <scope>test</scope>
