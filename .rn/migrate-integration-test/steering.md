@@ -32,7 +32,7 @@
 ## Tasks
 
 - [x] #1 — pom.xml 作成
-- [ ] #2 — 基盤5件 + 共通設定 + 変換生成データの配置
+- [x] #2 — 基盤5件 + 共通設定 + 変換生成データの配置
 - [ ] #3 — TestSupportYamlTest 配置・緑確認
 - [ ] #4 — MultiResourceDataSetUpYamlTest 配置・緑確認
 - [ ] #5 — BatchRequestTestSupportYamlTest 配置・緑確認
@@ -161,7 +161,7 @@
 ## State
 
 <!--
-last_completed: #1
-next_task: #2
+last_completed: #2
+next_task: #3
 notes: (none)
 -->
