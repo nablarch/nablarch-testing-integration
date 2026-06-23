@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-configuration
+        xmlns="http://tis.co.jp/nablarch/component-configuration"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration ./component-configuration.xsd">
+
+
+  <!-- TestDataParser: 形式（YAML/EXCEL）に応じて委譲するラッパー -->
+  <!-- EXCEL 用実体 -->
+  <component name="excelTestDataParser" class="nablarch.test.core.reader.BasicTestDataParser">
+    <property name="testDataReader">
+      <component name="xlsReaderForPoi" class="nablarch.test.core.reader.PoiXlsReader"/>
+    </property>
+    <property name="interpreters" ref="interpreters" />
+  </component>
+  <!-- YAML 用実体 -->
+  <component name="yamlTestDataParser" class="nablarch.test.core.reader.YamlTestDataParser"
+             autowireType="None">
+    <property name="interpreters" ref="yamlInterpreters" />
+    <property name="defaultValues">
+      <component class="nablarch.test.core.db.BasicDefaultValues"/>
+    </property>
+  </component>
+  <!-- 形式に応じて委譲するラッパー -->
+  <component name="testDataParser" class="nablarch.test.core.reader.FormatAwareTestDataParser">
+    <property name="yamlParser" ref="yamlTestDataParser"/>
+    <property name="excelParser" ref="excelTestDataParser"/>
+  </component>
+
+  <!-- テストデータ記法の解釈を行うクラス群（Excel 用：QuotationTrimmer を含む） -->
+  <list name="interpreters">
+    <!-- null変換 -->
+    <component class="nablarch.test.core.util.interpreter.NullInterpreter"/>
+    <!-- 引用符を外す（Excel 上の """ → " 変換。YAML 経路では使用しない） -->
+    <component class="nablarch.test.core.util.interpreter.QuotationTrimmer"/>
+    <!-- 文字列増幅 -->
+    <component class="nablarch.test.core.util.interpreter.CompositeInterpreter">
+      <property name="interpreters">
+        <list>
+          <component class="nablarch.test.core.util.interpreter.BasicJapaneseCharacterInterpreter"/>
+        </list>
+      </property>
+    </component>
+  </list>
+
+  <!-- YAML 用インタープリタリスト（QuotationTrimmer を含まない）
+       YAML 1.2 ではライブラリがダブルクォートを構文として処理済みで返すため、
+       QuotationTrimmer は不要かつ二重処理になる。 -->
+  <list name="yamlInterpreters">
+    <!-- null変換 -->
+    <component class="nablarch.test.core.util.interpreter.NullInterpreter"/>
+    <!-- 文字列増幅 -->
+    <component class="nablarch.test.core.util.interpreter.CompositeInterpreter">
+      <property name="interpreters">
+        <list>
+          <component class="nablarch.test.core.util.interpreter.BasicJapaneseCharacterInterpreter"/>
+        </list>
+      </property>
+    </component>
+  </list>
+
+
+</component-configuration>
