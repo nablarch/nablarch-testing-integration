@@ -47,12 +47,12 @@
 - [x] #14 — FileSupportYamlTest 配置・緑確認
 - [x] #15 — AbstractHttpRequestTestTemplateTest2YamlTest 配置・緑確認
 - [x] #16 — AbstractHttpRequestTestTemplateYamlTest 配置・緑確認
-- [ ] #17 — MessagingReceiveTestSupportYamlTest 配置・緑確認
-- [ ] #18 — MessagingRequestTestSupportYamlTest 配置・緑確認
-- [ ] #19 — RequestTestingMessagingClientYamlTest 配置・緑確認
-- [ ] #20 — RequestTestingMessagingContextYamlTest 配置・緑確認
-- [ ] #21 — RequestTestingSendSyncBatchYamlTest 配置・緑確認
-- [ ] #22 — RequestTestingSendSyncSupportYamlTest 配置・緑確認
+- [x] #17 — MessagingReceiveTestSupportYamlTest 配置・緑確認
+- [x] #18 — MessagingRequestTestSupportYamlTest 配置・緑確認
+- [x] #19 — RequestTestingMessagingClientYamlTest 配置・緑確認
+- [x] #20 — RequestTestingMessagingContextYamlTest 配置・緑確認
+- [x] #21 — RequestTestingSendSyncBatchYamlTest 配置・緑確認
+- [x] #22 — RequestTestingSendSyncSupportYamlTest 配置・緑確認
 
 ### タスク詳細
 
@@ -161,7 +161,7 @@
 ## State
 
 <!--
-last_completed: #16
-next_task: #17
-notes: (none)
+last_completed: #22
+next_task: done
+notes: 全22タスク完了。YAMLサブ20クラスすべて BUILD SUCCESS 確認済み。
 -->
