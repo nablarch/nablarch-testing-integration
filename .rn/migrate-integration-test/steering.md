@@ -162,7 +162,7 @@
 
 <!--
 Status: paused
-Date: 2026-06-23
+Date: 2026-06-24
 Last completed: 全緑化（mvn test 全件パス）
 Next: PR マージ待ち（ユーザー確認中）
 Notes: |
@@ -171,7 +171,8 @@ Notes: |
   - README.md 作成済み（目的・出自・変更点・実行方法・依存関係を記載）。
   - 欠損リソース18件（testdata.txt, BasicTestDataParserTest.xls, YamlTestDataParserTest/16件）を追加済み。
   - pom.xml に surefire reuseForks=false / forkCount=1 を追加（H2 DB汚染対策）。
-  - mvn test: Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS (3分41秒)。
+  - nablarch-testing-yaml にスキーマバリデーション追加後、2回の修正（group_id 追加・length minimum:0）を経て全緑化を再確認。
+  - mvn test: Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS (3分10秒)。
   - PR は feature/migrate-integration-test → develop で作成済み。マージはユーザー判断待ち。
   - 次の作業があれば新ステアリングを作成すること。
 -->
