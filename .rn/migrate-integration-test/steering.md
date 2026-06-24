@@ -163,16 +163,17 @@
 <!--
 Status: paused
 Date: 2026-06-24
-Last completed: 全緑化（mvn test 全件パス）
+Last completed: yaml YAML更新後の再テスト＋コードレビュー修正
 Next: PR マージ待ち（ユーザー確認中）
 Notes: |
   - 全22タスク完了済み。YAMLサブ20クラス + 基盤テストすべて BUILD SUCCESS。
-  - format/format/ の生成物71件を git rm で除去し .gitignore に追記済み。
-  - README.md 作成済み（目的・出自・変更点・実行方法・依存関係を記載）。
-  - 欠損リソース18件（testdata.txt, BasicTestDataParserTest.xls, YamlTestDataParserTest/16件）を追加済み。
-  - pom.xml に surefire reuseForks=false / forkCount=1 を追加（H2 DB汚染対策）。
-  - nablarch-testing-yaml にスキーマバリデーション追加後、2回の修正（group_id 追加・length minimum:0）を経て全緑化を再確認。
-  - mvn test: Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS (3分10秒)。
+  - 今回の対応:
+    - nablarch-testing-yaml が json-schema-validator 1.5.9 を使用するよう更新された結果、
+      integration 側の pom.xml が 3.0.2 を宣言していたため ClassNotFoundException 発生。
+    - pom.xml: json-schema-validator 3.0.2 → 1.5.9 に変更（3.x は tools.jackson 依存で com.fasterxml.jackson とは非互換）。
+    - YamlSchemaValidationTest: SchemaRegistry/SpecificationVersion → JsonSchemaFactory/SpecVersion API に書き換え。
+    - YamlSchemaValidationTest: Files.list() を try-with-resources で囲いディレクトリハンドルリークを修正。
+  - mvn test: Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS。
   - PR は feature/migrate-integration-test → develop で作成済み。マージはユーザー判断待ち。
   - 次の作業があれば新ステアリングを作成すること。
 -->
