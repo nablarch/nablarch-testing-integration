@@ -1,10 +1,10 @@
 package nablarch.test.core.reader;
 
-import com.networknt.schema.Error;
 import com.networknt.schema.InputFormat;
-import com.networknt.schema.Schema;
-import com.networknt.schema.SchemaRegistry;
-import com.networknt.schema.SpecificationVersion;
+import com.networknt.schema.JsonSchema;
+import com.networknt.schema.JsonSchemaFactory;
+import com.networknt.schema.SpecVersion;
+import com.networknt.schema.ValidationMessage;
 import org.junit.Test;
 
 import java.io.InputStream;
@@ -12,8 +12,9 @@ import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
+import java.util.Set;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 import static org.hamcrest.CoreMatchers.is;
 import static org.junit.Assert.assertThat;
@@ -32,13 +33,13 @@ public class YamlSchemaValidationTest {
     private static final String SCHEMA_RESOURCE =
             "/nablarch/test/ntf-testdata-yaml-schema.json";
 
-    private Schema loadSchema() throws Exception {
+    private JsonSchema loadSchema() throws Exception {
         try (InputStream in = getClass().getResourceAsStream(SCHEMA_RESOURCE)) {
             if (in == null) {
                 throw new IllegalStateException("Schema not found: " + SCHEMA_RESOURCE);
             }
-            SchemaRegistry registry = SchemaRegistry.withDefaultDialect(SpecificationVersion.DRAFT_2020_12);
-            return registry.getSchema(in, InputFormat.JSON);
+            JsonSchemaFactory factory = JsonSchemaFactory.getInstance(SpecVersion.VersionFlag.V202012);
+            return factory.getSchema(in);
         }
     }
 
@@ -50,25 +51,27 @@ public class YamlSchemaValidationTest {
     @Test
     public void allTestYamlFilesConformToSchema() throws Exception {
         // Given
-        Schema schema = loadSchema();
+        JsonSchema schema = loadSchema();
 
-        for (Path yamlFile : Files.list(Paths.get(YAML_DIR))
-                .filter(p -> p.toString().endsWith(".yaml"))
-                // nativeTypes.yaml はクォートなし boolean/integer/float でパーサーの型変換動作を検証する特殊ファイル（スキーマ準拠外）
-                .filter(p -> !p.getFileName().toString().equals("nativeTypes.yaml"))
-                .sorted()
-                .collect(Collectors.toList())) {
+        try (Stream<Path> stream = Files.list(Paths.get(YAML_DIR))) {
+            for (Path yamlFile : stream
+                    .filter(p -> p.toString().endsWith(".yaml"))
+                    // nativeTypes.yaml はクォートなし boolean/integer/float でパーサーの型変換動作を検証する特殊ファイル（スキーマ準拠外）
+                    .filter(p -> !p.getFileName().toString().equals("nativeTypes.yaml"))
+                    .sorted()
+                    .collect(Collectors.toList())) {
 
-            // When
-            String yaml = new String(Files.readAllBytes(yamlFile), StandardCharsets.UTF_8);
-            List<Error> errors = schema.validate(yaml, InputFormat.YAML);
+                // When
+                String yaml = new String(Files.readAllBytes(yamlFile), StandardCharsets.UTF_8);
+                Set<ValidationMessage> errors = schema.validate(yaml, InputFormat.YAML);
 
-            // Then
-            assertThat(
-                    yamlFile.getFileName() + ": " + errors,
-                    errors.size(),
-                    is(0)
-            );
+                // Then
+                assertThat(
+                        yamlFile.getFileName() + ": " + errors,
+                        errors.size(),
+                        is(0)
+                );
+            }
         }
     }
 }
