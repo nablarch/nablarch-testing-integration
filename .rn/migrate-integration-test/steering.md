@@ -53,6 +53,7 @@
 - [x] #20 — RequestTestingMessagingContextYamlTest 配置・緑確認
 - [x] #21 — RequestTestingSendSyncBatchYamlTest 配置・緑確認
 - [x] #22 — RequestTestingSendSyncSupportYamlTest 配置・緑確認
+- [x] #23 — Java 17 でコンパイル・テスト・インストール
 
 ### タスク詳細
 
@@ -162,18 +163,14 @@
 
 <!--
 Status: paused
-Date: 2026-06-24
-Last completed: yaml YAML更新後の再テスト＋コードレビュー修正
-Next: PR マージ待ち（ユーザー確認中）
+Date: 2026-06-25
+Last completed: #23 Java 17 でコンパイル・テスト・インストール
+Next: 全タスク完了。PR マージ待ち（ユーザー確認中）
 Notes: |
-  - 全22タスク完了済み。YAMLサブ20クラス + 基盤テストすべて BUILD SUCCESS。
-  - 今回の対応:
-    - nablarch-testing-yaml が json-schema-validator 1.5.9 を使用するよう更新された結果、
-      integration 側の pom.xml が 3.0.2 を宣言していたため ClassNotFoundException 発生。
-    - pom.xml: json-schema-validator 3.0.2 → 1.5.9 に変更（3.x は tools.jackson 依存で com.fasterxml.jackson とは非互換）。
-    - YamlSchemaValidationTest: SchemaRegistry/SpecificationVersion → JsonSchemaFactory/SpecVersion API に書き換え。
-    - YamlSchemaValidationTest: Files.list() を try-with-resources で囲いディレクトリハンドルリークを修正。
-  - mvn test: Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS。
+  - 全23タスク完了済み。
+  - Java 17 / Maven 3.9.9 環境で mvn install 成功。
+  - Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS。
+  - nablarch-testing-integration-1.0.0-SNAPSHOT が ~/.m2 にインストール済み。
   - PR は feature/migrate-integration-test → develop で作成済み。マージはユーザー判断待ち。
   - 次の作業があれば新ステアリングを作成すること。
 -->
