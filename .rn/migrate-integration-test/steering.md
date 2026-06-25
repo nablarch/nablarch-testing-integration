@@ -171,6 +171,6 @@ Notes: |
   - Java 17 / Maven 3.9.9 環境で mvn install 成功。
   - Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS。
   - nablarch-testing-integration-1.0.0-SNAPSHOT が ~/.m2 にインストール済み。
-  - PR #1 (feature/migrate-integration-test → develop) 作成済み・タイトルと本文を整備済み。マージはユーザー判断待ち。
+  - PR #1 (feature/migrate-integration-test → develop) 作成済み・タイトルと本文を整備済み（README の内容を踏まえて Why/What/Testing の3セクション構成）。マージはユーザー判断待ち。
   - 次の作業があれば新ステアリングを作成すること。
 -->
