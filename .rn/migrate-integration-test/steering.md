@@ -165,12 +165,12 @@
 Status: paused
 Date: 2026-06-25
 Last completed: #23 Java 17 でコンパイル・テスト・インストール
-Next: 全タスク完了。PR マージ待ち（ユーザー確認中）
+Next: 全タスク完了。PR マージ待ち（ユーザー承認待ち）
 Notes: |
   - 全23タスク完了済み。
   - Java 17 / Maven 3.9.9 環境で mvn install 成功。
   - Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS。
   - nablarch-testing-integration-1.0.0-SNAPSHOT が ~/.m2 にインストール済み。
-  - PR は feature/migrate-integration-test → develop で作成済み。マージはユーザー判断待ち。
+  - PR #1 (feature/migrate-integration-test → develop) 作成済み・タイトルと本文を整備済み。マージはユーザー判断待ち。
   - 次の作業があれば新ステアリングを作成すること。
 -->
