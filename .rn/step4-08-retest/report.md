@@ -265,3 +265,126 @@ converter は `Tests run: 682` 全緑、yaml は `Tests run: 320` 全緑。
 
 テスト実行で `work/` 配下に生成・削除される作業ファイル（`work/input.txt` 等）は
 `git checkout -- work/` と生成物削除で復元済み。`git status --short` は空。
+
+---
+
+# 再実行（#54 追随後）— 2026-08-31
+
+## R-1. 結論
+
+**全緑。`Tests run: 546, Failures: 0, Errors: 0, Skipped: 18` / BUILD SUCCESS。**
+2026-06-25 基準（`69125c3`）と件数が完全一致し、初回再検証で出た Errors 7件は解消した。
+Failures / Errors は **0件**。モジュール・integration とも一切変更していない。
+
+初回再検証で報告した原因（converter がマーカーカラムだけのブロックの行を落とす）は、
+converter の `ce86a6d`「feat: カラム名の行がマーカーカラムだけのブロックを、名前と値を保って読む（辺①）」
+（`src/main/java/nablarch/test/tool/converter/xls/XlsFormatReader.java` ほか 10 ファイル・+533/−59）
+および `cd83fd2`（辺②・YAML 読み側の対称化）で是正されている。
+
+## R-2. 使った jar の証拠
+
+### R-2-1. 本体 nablarch-testing（取り直し不要と判定）
+
+```
+$ javap -p -classpath ~/.m2/repository/com/nablarch/framework/nablarch-testing/6-NEXT-SNAPSHOT/nablarch-testing-6-NEXT-SNAPSHOT.jar \
+    nablarch.test.core.reader.TestDataParsingTemplate | grep -c "cachedParse\|tryLoadFromCache\|storeToCache"
+3
+
+$ unzip -p ...nablarch-testing-6-NEXT-SNAPSHOT.jar META-INF/MANIFEST.MF | grep Build-Jdk
+Build-Jdk: 17.0.19
+
+$ ls -l --time-style=long-iso ...nablarch-testing-6-NEXT-SNAPSHOT.jar
+-rw-r--r-- 1 tie303177 tie303177 513063 2026-08-21 18:28 .../nablarch-testing-6-NEXT-SNAPSHOT.jar
+```
+
+3メソッドが揃うため PR ブランチ由来。指示書 §1-2 の判定基準どおり取り直し不要。
+
+### R-2-2. yaml・converter（GitHub から新規 clone → install）
+
+clone 先: `~/work/nablarch/tmp-step4-08/`（既存の他担当作業ツリーには触れていない）
+
+| モジュール | clone 時 HEAD | install 対象 | ピン | 一致 |
+|---|---|---|---|---|
+| nablarch-testing-yaml (`feature/ntf-yaml`) | `6175639` | `git checkout 4837713` 実施後 `4837713c2dd954f5426497b1b32355ac0fb713d9` | `4837713` | ○ |
+| nablarch-testing-converter (`ntf-test-data-converter`) | `9ab66481ba9deecda641d5224637e2e884ec7503` | 同左（checkout 不要） | `9ab6648` | ○ |
+
+yaml の remote 先端は指示書 §5-1 が記した `2b35561` からさらに `6175639` へ進んでいたが、
+§5-1 の指示どおり `4837713` を checkout してから install したため、検証対象はピンどおりである。
+
+install（`JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn -B clean install`、yaml → converter の順）:
+
+- yaml: BUILD SUCCESS（`Total time: 19.389 s` / `Finished at: 2026-08-31T15:37:43+09:00`）
+- converter: BUILD SUCCESS（`Tests run: 731, Failures: 0, Errors: 0, Skipped: 0` / `Total time: 43.955 s` / `Finished at: 2026-08-31T15:38:42+09:00`）
+
+install 後の `~/.m2`:
+
+```
+-rw-r--r-- 1 tie303177 tie303177 122508 2026-08-31 15:38 .../nablarch-testing-converter-1.0.0-SNAPSHOT.jar
+-rw-r--r-- 1 tie303177 tie303177  37570 2026-08-31 15:37 .../nablarch-testing-yaml-1.0.0-SNAPSHOT.jar
+```
+
+両 jar の MANIFEST とも `Build-Jdk: 17.0.19`。
+
+## R-3. Surefire summary（逐語）
+
+```
+[INFO] 
+[INFO] Results:
+[INFO] 
+[WARNING] Tests run: 546, Failures: 0, Errors: 0, Skipped: 18
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  03:18 min
+[INFO] Finished at: 2026-08-31T15:42:21+09:00
+[INFO] ------------------------------------------------------------------------
+```
+
+## R-4. Failures / Errors の全件分類
+
+**0件。** 初回再検証で (a) モジュールの是正起因に分類した
+`AbstractHttpRequestTestTemplateYamlTest` の Errors 7件は解消した。
+本再実行では同クラスが `Tests run: 22, Failures: 0, Errors: 0, Skipped: 0`（`Time elapsed: 5.645 s`）である。
+
+## R-5. Skipped 全件（18件）
+
+**「5. Skipped 全件（18件）」の表と同一の18件**（surefire XML から再抽出して照合済み。クラス・メソッド名・件数とも一致）。
+2026-06-25 基準（Skipped 18）との件数差は **0**。
+
+由来の内訳（surefire XML の skipped message とソースを突き合わせて再確認）:
+
+- `Assume` 4件（messaging）: skipped message は `got: "17", expected: (is "1.6" or is "1.7")`。
+  `RequestTestingMessagingClientTest.java:438` / `:479` の
+  `Assume.assumeThat(System.getProperty("java.specification.version"), anyOf(is("1.6"), is("1.7")))`。実行 JDK は 17。
+  YAML 版 `RequestTestingMessagingClientYamlTest` は同メソッドを継承（前掲表 #1–#4）
+- `@TargetDb`（Assume 相当）4件（db）: skipped message は空。
+  `DbAccessTestSupportTest.java:277`（`include = TargetDb.Db.ORACLE`）・`:311`（`include = TargetDb.Db.POSTGRE_SQL`）。
+  実行 DB は H2。YAML 版は同メソッドを継承（前掲表 #5–#8）
+- `@Ignore` 10件: `TestSupportYamlTest.java:23` / `:26`（2件）、`FileSupportYamlTest.java`（4件・`:24` ほか）、
+  `FileSupportWithDbLessTestDataParserYamlTest`（4件）。
+  各 `@Ignore` の理由文字列は surefire の skipped message と一致（前掲表 #9–#18）
+
+**前掲表の集計行の訂正**: 「5. Skipped 全件（18件）」冒頭は「`@Ignore` 8件・`Assume` 相当 10件」と書いているが、
+同表の行を数えると `@Ignore` が #9–#18 の 10件、`Assume` 相当（`Assume` 4件 + `@TargetDb` 4件）が 8件である。
+表の各行の分類は正しく、集計行の 8/10 が入れ替わっている。表本体は時点の証拠として書き換えず、ここで訂正する。
+
+## R-6. 判断を仰ぐ事項
+
+**なし。** 初回再検証の「事項1（`rowCount` を戻すか）」は行を保つ方向で決着済み、
+「事項2（converter 側の回帰テスト）」は converter `ce86a6d` が `XlsMarkerOnlyBlockTest`（255行・新設）を
+追加して担保しており、本結合テストでも全緑を確認した。
+
+## R-7. 実行条件
+
+| 項目 | 値 |
+|---|---|
+| 作業場 | `/home/tie303177/work/nablarch/nablarch-testing-integration` |
+| ブランチ / HEAD | `feature/migrate-integration-test` / `e276792b30675e3b282b4381c1de913277ee928e`（remote 先端と一致） |
+| JAVA_HOME | `/usr/lib/jvm/temurin-17-jdk-amd64` |
+| コマンド | `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn -B clean test` |
+| surefire 設定 | pom のまま（`reuseForks=false` / `forkCount=1`）。変更なし |
+| 所要 | 03:18 min（2026-08-31T15:42:21+09:00 終了） |
+
+テスト実行で `work/` 配下に生成・削除される作業ファイルは `git checkout -- work/` と生成物削除で復元済み。
+`git status --short` は空。

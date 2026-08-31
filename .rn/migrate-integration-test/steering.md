@@ -59,6 +59,7 @@ Rn version: 0.8.0
 - [x] #22 — RequestTestingSendSyncSupportYamlTest 配置・緑確認
 - [x] #23 — Java 17 でコンパイル・テスト・インストール
 - [x] #24 — Step 4-08 再検証（修正後 yaml・converter での結合テスト再実行・報告）
+- [x] #25 — Step 4-08 再実行（#54 追随後 converter での結合テスト再実行・報告）
 
 ### タスク詳細
 
@@ -181,20 +182,41 @@ Rn version: 0.8.0
 - Failures / Errors 全件に分類・根拠・コミットが付いている
 - `git status --short` が空
 
+#### #25 Step 4-08 再実行（#54 追随後）
+
+**Purpose**: 解説書の仕様変更 #54「マーカーカラムとその値を保って変換する」へ追随した
+`nablarch-testing-converter`（`9ab6648`）で結合テストを一括再実行し、
+#24 で観測した Errors 7件が解消したかを確認して報告する。
+
+**Prerequisites**: #24
+
+**Steps**:
+1. 本体 `nablarch-testing` jar の PR ブランチ由来判定（javap / MANIFEST）
+2. yaml・converter を GitHub から新規 clone。yaml は `4837713` を checkout、converter は HEAD が `9ab6648` であることを確認
+3. yaml → converter の順に Java 17 で `mvn clean install`
+4. `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn -B clean test`
+5. `.rn/step4-08-retest/report.md` に「再実行（#54 追随後）」の節として追記（既存本文は書き換えない）
+
+**Completion criteria**:
+- 使った jar の証拠（javap / MANIFEST / clone HEAD / install 後タイムスタンプと Build-Jdk）が報告にある
+- Surefire summary が逐語で報告にある
+- Skipped 全件が由来付きで列挙され、2026-06-25 基準との件数差が説明されている
+- Failures / Errors 全件に分類・根拠・コミットが付いている（0件なら明記）
+- `git status --short` が空
+
 # State
 
-- **Status**: paused
+- **Status**: not suspended
 - **Date**: 2026-08-31
-- **Last completed**: #24 Step 4-08 再検証（修正後 yaml `4837713` / converter `a5f006c` での結合テスト再実行）
-- **Next**: 判断待ち。converter `XlsFormatReader#rowCount`（`XlsFormatReader.java:619`・コミット `1915207`）を戻すかどうかのユーザー判断を受けてから動く
+- **Last completed**: #25 Step 4-08 再実行（#54 追随後 converter `9ab6648` / yaml `4837713` での結合テスト再実行）
+- **Next**: なし（全タスク完了）。PR #1（→ develop）のマージ待ち
 - **Notes**:
   - ブランチ `feature/migrate-integration-test`。PR #1（→ develop）はマージ待ち。
-  - 再検証結果は赤: `Tests run: 546, Failures: 0, Errors: 7, Skipped: 18` / BUILD FAILURE。
-    Errors 7件はすべて `AbstractHttpRequestTestTemplateYamlTest`、分類は全件 (a) モジュールの是正起因。
-  - 原因: converter がマーカーカラム（`[no]`）のみのブロックの行を 0 行に落とすため
-    `requestParams` の LIST_MAP が YAML で空になる。本体 `TestCaseInfo.java:344-351` は
-    その件数をケース no の位置インデックスとして使うので全ケースで例外。
-  - 未決: 事項1「converter を戻すか（推奨 A）／本体を変えるか／Excel を変えるか」、
-    事項2「converter 側にこの用法の回帰テストを足すか」。どちらもユーザー判断待ち。
-  - 詳細（jar 証拠・Surefire summary 逐語・分類表・Skipped 全件）は `.rn/step4-08-retest/report.md`。
-  - user-deferred な未追跡パス: なし。
+  - 再実行結果は全緑: `Tests run: 546, Failures: 0, Errors: 0, Skipped: 18` / BUILD SUCCESS。
+    2026-06-25 基準（`69125c3`）へ完全に回帰した。
+  - #24 で報告した Errors 7件（`AbstractHttpRequestTestTemplateYamlTest`）は converter の
+    `ce86a6d`（辺①）・`cd83fd2`（辺②）で解消。判断待ちだった事項1・事項2はいずれも決着済み。
+  - 詳細（jar 証拠・Surefire summary 逐語・Skipped 全件）は `.rn/step4-08-retest/report.md` の
+    「再実行（#54 追随後）」節。同節で既存節の集計行（`@Ignore` 8件 / `Assume` 相当 10件）の
+    入れ替わりを訂正している（正: `@Ignore` 10件 / `Assume` 相当 8件）。
+  - モジュール・integration とも無変更。user-deferred な未追跡パス: なし。
