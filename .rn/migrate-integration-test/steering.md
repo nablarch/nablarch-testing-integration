@@ -163,14 +163,19 @@
 
 <!--
 Status: paused
-Date: 2026-06-25
-Last completed: #23 Java 17 でコンパイル・テスト・インストール
-Next: 全タスク完了。PR マージ待ち（ユーザー承認待ち）
+Date: 2026-08-31
+Last completed: Step 4-08 再検証（修正後 nablarch-testing-yaml `4837713` / nablarch-testing-converter `a5f006c` での結合テスト再実行）
+Next: 判断待ち。converter `XlsFormatReader#rowCount`（`XlsFormatReader.java:619`・コミット `1915207`）を戻すかどうかのユーザー判断を受けてから動く
 Notes: |
-  - 全23タスク完了済み。
-  - Java 17 / Maven 3.9.9 環境で mvn install 成功。
-  - Tests run: 546, Failures: 0, Errors: 0, Skipped: 18 / BUILD SUCCESS。
-  - nablarch-testing-integration-1.0.0-SNAPSHOT が ~/.m2 にインストール済み。
-  - PR #1 (feature/migrate-integration-test → develop) 作成済み・タイトルと本文を整備済み（README の内容を踏まえて Why/What/Testing の3セクション構成）。マージはユーザー判断待ち。
-  - 次の作業があれば新ステアリングを作成すること。
+  - 結果は赤: Tests run: 546, Failures: 0, Errors: 7, Skipped: 18 / BUILD FAILURE。
+  - Errors 7件はすべて AbstractHttpRequestTestTemplateYamlTest。例外は全件
+    IllegalArgumentException: Request parameter is not defined or request parameter list size is invalid.case no = [1]。
+  - 原因: converter がマーカーカラム（`[no]`）のみのブロックの行を 0 行に落とすため、
+    requestParams の LIST_MAP が YAML で空になる。本体 TestCaseInfo.java:344-351 は
+    その件数をケース no の位置インデックスとして使うので全ケースで例外。
+  - Excel 版 AbstractHttpRequestTestTemplateTest は 22件全緑。YAML 版のみ割れる。
+  - 総数 546 と Skipped 18 は 2026-06-25 基準と同一。差分は Errors 0 → 7 のみ。
+  - 指示書どおりモジュール・integration ともに一切変更していない。
+  - 詳細（jar 証拠・Surefire summary 逐語・分類表・Skipped 全件・判断を仰ぐ事項）は
+    .rn/step4-08-retest/report.md。
 -->
