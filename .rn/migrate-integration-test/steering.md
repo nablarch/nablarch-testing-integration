@@ -1,16 +1,15 @@
-# Steering: nablarch-testing-integration 構築
-
-## Goal
+# Goal
 
 `nablarch-testing`（ブランチ `convert-testdata-excel-to-text`）から integration 対象ファイルを
 本リポジトリへ移動・コピーし、YAMLサブ20クラスすべてが `mvn test` で単独実行緑になる状態にする。
 
-## Rules
+# Acceptance criteria
 
-- **変更したら必ずプッシュする**（コミット後に `git push` を実行する）
-- PR本文はステアリングへのリンクのみとする（内容の重複を防ぐ）
+- YAMLサブ20クラスすべてが単独実行で BUILD SUCCESS
+- コピー分は本体現ブランチとバイト照合済み（差分ゼロ）
+- push はユーザー承認後のみ実施
 
-## Context
+# Assumptions
 
 - 移動元: `/home/tie303177/work/nablarch/nablarch-testing`（ブランチ `convert-testdata-excel-to-text`）
   - **参照専用。本体への書き込み・削除は一切行わない**
@@ -22,14 +21,17 @@
 - 正本ファイル一覧: `.rn/migrate-integration-test/repo-split-filelist.md`（#列の番号で参照）
 - 作業指示詳細: `.rn/migrate-integration-test/cc-integration-build.md`
 
-### 処理ルール
+# Rules
 
+- commit and push every change; one completion marker per task
+- **変更したら必ずプッシュする**（コミット後に `git push` を実行する）
+- PR本文はステアリングへのリンクのみとする（内容の重複を防ぐ）
 - **移動**（#128–153）: 本体から integration へコピー（本体側は削除しない＝コピー動作）
 - **コピー**（#21–51）: 本体に残しつつ integration にも複製
 - 変更禁止: 物理コピー／package・import の機械的調整／pom 設定のみ許可
 - ロジック・期待値・アサーション変更が要る場合は**手を止めてユーザーに報告**
 
-## Tasks
+# Tasks
 
 - [x] #1 — pom.xml 作成
 - [x] #2 — 基盤5件 + 共通設定 + 変換生成データの配置
@@ -54,6 +56,7 @@
 - [x] #21 — RequestTestingSendSyncBatchYamlTest 配置・緑確認
 - [x] #22 — RequestTestingSendSyncSupportYamlTest 配置・緑確認
 - [x] #23 — Java 17 でコンパイル・テスト・インストール
+- [x] #24 — Step 4-08 再検証（修正後 yaml・converter での結合テスト再実行・報告）
 
 ### タスク詳細
 
@@ -153,29 +156,43 @@
 - `mvn test -Dtest=<YAMLサブ名>` が BUILD SUCCESS
 - テスト結果のログ（Tests run / Failures / Errors / Skipped）を提示
 
-## Acceptance criteria
+---
 
-- YAMLサブ20クラスすべてが単独実行で BUILD SUCCESS
-- コピー分は本体現ブランチとバイト照合済み（差分ゼロ）
-- push はユーザー承認後のみ実施
+#### #24 Step 4-08 再検証
 
-## State
+**Purpose**: 是正後の `nablarch-testing-yaml`（`4837713`）・`nablarch-testing-converter`（`a5f006c`）で
+結合テストを一括再実行し、どこが割れるかを観測して報告する。緑化は目的ではない。
 
-<!--
-Status: paused
-Date: 2026-08-31
-Last completed: Step 4-08 再検証（修正後 nablarch-testing-yaml `4837713` / nablarch-testing-converter `a5f006c` での結合テスト再実行）
-Next: 判断待ち。converter `XlsFormatReader#rowCount`（`XlsFormatReader.java:619`・コミット `1915207`）を戻すかどうかのユーザー判断を受けてから動く
-Notes: |
-  - 結果は赤: Tests run: 546, Failures: 0, Errors: 7, Skipped: 18 / BUILD FAILURE。
-  - Errors 7件はすべて AbstractHttpRequestTestTemplateYamlTest。例外は全件
-    IllegalArgumentException: Request parameter is not defined or request parameter list size is invalid.case no = [1]。
-  - 原因: converter がマーカーカラム（`[no]`）のみのブロックの行を 0 行に落とすため、
-    requestParams の LIST_MAP が YAML で空になる。本体 TestCaseInfo.java:344-351 は
+**Prerequisites**: #23
+
+**Steps**:
+1. 本体 `nablarch-testing` jar が PR ブランチ由来かを javap / MANIFEST で確認
+2. yaml・converter を GitHub から新規 clone し、ピン一致を確認のうえ Java 17 で `mvn clean install`
+3. `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn clean test` を実行
+4. 落ちた全件に分類（(a) 是正起因 /(b) スキーマ起因 /(c) 環境起因）・根拠 `file:line`・コミットを付す
+5. `.rn/step4-08-retest/report.md` に記録し、モジュール・integration とも無変更のまま停止
+
+**Completion criteria**:
+- 使った jar の証拠（javap / MANIFEST / clone HEAD / install 後タイムスタンプと Build-Jdk）が報告にある
+- Surefire summary が逐語で報告にある
+- Skipped 全件が由来（`@Ignore` / `Assume`）付きで列挙され、2026-06-25 基準との件数差が説明されている
+- Failures / Errors 全件に分類・根拠・コミットが付いている
+- `git status --short` が空
+
+# State
+
+- **Status**: paused
+- **Date**: 2026-08-31
+- **Last completed**: #24 Step 4-08 再検証（修正後 yaml `4837713` / converter `a5f006c` での結合テスト再実行）
+- **Next**: 判断待ち。converter `XlsFormatReader#rowCount`（`XlsFormatReader.java:619`・コミット `1915207`）を戻すかどうかのユーザー判断を受けてから動く
+- **Notes**:
+  - ブランチ `feature/migrate-integration-test`。PR #1（→ develop）はマージ待ち。
+  - 再検証結果は赤: `Tests run: 546, Failures: 0, Errors: 7, Skipped: 18` / BUILD FAILURE。
+    Errors 7件はすべて `AbstractHttpRequestTestTemplateYamlTest`、分類は全件 (a) モジュールの是正起因。
+  - 原因: converter がマーカーカラム（`[no]`）のみのブロックの行を 0 行に落とすため
+    `requestParams` の LIST_MAP が YAML で空になる。本体 `TestCaseInfo.java:344-351` は
     その件数をケース no の位置インデックスとして使うので全ケースで例外。
-  - Excel 版 AbstractHttpRequestTestTemplateTest は 22件全緑。YAML 版のみ割れる。
-  - 総数 546 と Skipped 18 は 2026-06-25 基準と同一。差分は Errors 0 → 7 のみ。
-  - 指示書どおりモジュール・integration ともに一切変更していない。
-  - 詳細（jar 証拠・Surefire summary 逐語・分類表・Skipped 全件・判断を仰ぐ事項）は
-    .rn/step4-08-retest/report.md。
--->
+  - 未決: 事項1「converter を戻すか（推奨 A）／本体を変えるか／Excel を変えるか」、
+    事項2「converter 側にこの用法の回帰テストを足すか」。どちらもユーザー判断待ち。
+  - 詳細（jar 証拠・Surefire summary 逐語・分類表・Skipped 全件）は `.rn/step4-08-retest/report.md`。
+  - user-deferred な未追跡パス: なし。
