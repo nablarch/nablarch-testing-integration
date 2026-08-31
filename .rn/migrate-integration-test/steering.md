@@ -1,3 +1,5 @@
+Rn version: 0.8.0
+
 # Goal
 
 `nablarch-testing`（ブランチ `convert-testdata-excel-to-text`）から integration 対象ファイルを
