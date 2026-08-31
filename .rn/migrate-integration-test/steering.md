@@ -206,17 +206,17 @@ Rn version: 0.8.0
 
 # State
 
-- **Status**: not suspended
+- **Status**: paused
 - **Date**: 2026-08-31
 - **Last completed**: #25 Step 4-08 再実行（#54 追随後 converter `9ab6648` / yaml `4837713` での結合テスト再実行）
-- **Next**: なし（全タスク完了）。PR #1（→ develop）のマージ待ち
+- **Next**: なし（#1–#25 すべて完了）。PR #1（→ develop）のマージ待ち
 - **Notes**:
   - ブランチ `feature/migrate-integration-test`。PR #1（→ develop）はマージ待ち。
   - 再実行結果は全緑: `Tests run: 546, Failures: 0, Errors: 0, Skipped: 18` / BUILD SUCCESS。
-    2026-06-25 基準（`69125c3`）へ完全に回帰した。
-  - #24 で報告した Errors 7件（`AbstractHttpRequestTestTemplateYamlTest`）は converter の
-    `ce86a6d`（辺①）・`cd83fd2`（辺②）で解消。判断待ちだった事項1・事項2はいずれも決着済み。
+    2026-06-25 基準（`69125c3`）へ完全に回帰。判断待ちだった事項1・事項2はいずれも決着済み。
   - 詳細（jar 証拠・Surefire summary 逐語・Skipped 全件）は `.rn/step4-08-retest/report.md` の
-    「再実行（#54 追随後）」節。同節で既存節の集計行（`@Ignore` 8件 / `Assume` 相当 10件）の
-    入れ替わりを訂正している（正: `@Ignore` 10件 / `Assume` 相当 8件）。
-  - モジュール・integration とも無変更。user-deferred な未追跡パス: なし。
+    「再実行（#54 追随後）」節。同節で既存節の Skipped 集計行の入れ替わりを訂正済み
+    （正: `@Ignore` 10件 / `Assume` 相当 8件）。
+  - 検証用 clone `~/work/nablarch/tmp-step4-08/`（yaml `4837713` / converter `9ab6648`）はリポジトリ外に残置。
+    `~/.m2` はこの2モジュールで install 済みなので、再現時はここを使うか作り直す。
+  - user-deferred な未追跡パス: なし。
