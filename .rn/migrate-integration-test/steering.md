@@ -230,15 +230,25 @@ Rn version: 0.8.0
 - `git status --short` が空
 
 
+**承認**: 2026-09-07、ディレクター（`ntf-doc-renewal-b5`）が `1fcd2f9` を承認。
+根拠は独立実測 —— scratchpad に clone（src は `d2353b7` と差分なし）し、yaml `a404126`・
+converter `223f954` を install して `mvn clean test` を実行、`546 件 / Failures 0 / Errors 0 / Skipped 18` を確認。
+本タスクの報告（`.rn/step4-08-retest/report.md` の S-1・S-3）と一致した。
+なお本タスクが install した converter は `8e4410c`。ディレクターの `223f954` は `8e4410c` の後に
+`.rn/ntf-test-data-converter/steering.md` だけを変える docs コミット
+（`git diff --stat 8e4410c 223f954` は同ファイル1件のみ）であり、`src` に差分はない。
+
 # State
 
 - **Status**: paused
 - **Date**: 2026-09-07
-- **Last completed**: #26 yaml `#51`（`a404126`）・converter `#57`（`8e4410c`。src は `878ef9a` のまま）追随後の
+- **Last completed**: #26（`1fcd2f9`。2026-09-07 ディレクター承認済み） yaml `#51`（`a404126`）・converter `#57`（`8e4410c`。src は `878ef9a` のまま）追随後の
   結合テスト再実行。**integration は変更なし・全緑**
-- **Next**: なし（#1–#26 すべて完了）。PR #1（→ develop）のマージ待ち
+- **Next**: なし（#1–#26 すべて完了・#26 まで承認済み）。PR #1（→ develop）のマージ待ち
 - **Notes**:
   - ブランチ `feature/migrate-integration-test`。PR #1（→ develop）はマージ待ち。
+  - #26 は 2026-09-07 にディレクターが独立実測（clone・yaml `a404126`／converter `223f954` で 546/0/0/18）
+    して承認済み。詳細は #26 のタスク詳細「承認」を参照。
   - #26 の結果は全緑: `Tests run: 546, Failures: 0, Errors: 0, Skipped: 18` / BUILD SUCCESS。
     2026-06-25 基準（`69125c3`）・#25 と件数完全一致。Skipped 18件の内訳も #25 と同一。
   - 詳細（jar 証拠・Surefire summary 逐語・Skipped 全件）は `.rn/step4-08-retest/report.md` の
