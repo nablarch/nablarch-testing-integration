@@ -60,6 +60,7 @@ Rn version: 0.8.0
 - [x] #23 — Java 17 でコンパイル・テスト・インストール
 - [x] #24 — Step 4-08 再検証（修正後 yaml・converter での結合テスト再実行・報告）
 - [x] #25 — Step 4-08 再実行（#54 追随後 converter での結合テスト再実行・報告）
+- [x] #26 — yaml `#51`・converter `#57` 追随後の結合テスト再実行・報告
 
 ### タスク詳細
 
@@ -204,19 +205,45 @@ Rn version: 0.8.0
 - Failures / Errors 全件に分類・根拠・コミットが付いている（0件なら明記）
 - `git status --short` が空
 
+#### #26 yaml `#51`・converter `#57` 追随後の結合テスト再実行
+
+**Purpose**: YAML スキーマの Excel との対称性の是正（`rows: []` を認める／ディレクティブの値を文字列でも書ける）に
+追随した yaml・converter で結合テストを一括再実行し、全緑を確認して報告する。
+
+**由来**: `/home/tie303177/work/cowork/nablarch/ntf-doc-renewal/指示/ntf-step4-18-schema-excel-parity.md` §5
+
+**Prerequisites**: #25
+
+**Steps**:
+1. `~/work/nablarch/nablarch-testing-yaml`（`feature/ntf-yaml` / `a404126`）を Java 17 で `mvn -DskipTests install`。
+   `~/.m2` の jar 内 `nablarch/test/ntf-testdata-yaml-schema.json` の `$defs.record_fragment.properties.rows` に
+   `minItems` が無いことを確認
+2. `~/work/nablarch/nablarch-testing-converter`（`ntf-test-data-converter` / `8e4410c`）を Java 17 で `mvn clean install`
+3. `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn -B clean test`
+4. `.rn/step4-08-retest/report.md` に「再実行（yaml `#51`・converter `#57` 追随後）」の節として追記
+
+**Completion criteria**:
+- 使った jar の証拠（javap / MANIFEST / HEAD / install 後タイムスタンプ）が報告にある
+- Surefire summary が逐語で報告にある
+- Skipped 全件が列挙され、基準との件数差が説明されている
+- Failures / Errors 全件に分類・根拠が付いている（0件なら明記）
+- `git status --short` が空
+
+
 # State
 
 - **Status**: paused
-- **Date**: 2026-08-31
-- **Last completed**: #25 Step 4-08 再実行（#54 追随後 converter `9ab6648` / yaml `4837713` での結合テスト再実行）
-- **Next**: なし（#1–#25 すべて完了）。PR #1（→ develop）のマージ待ち
+- **Date**: 2026-09-07
+- **Last completed**: #26 yaml `#51`（`a404126`）・converter `#57`（`8e4410c`。src は `878ef9a` のまま）追随後の
+  結合テスト再実行。**integration は変更なし・全緑**
+- **Next**: なし（#1–#26 すべて完了）。PR #1（→ develop）のマージ待ち
 - **Notes**:
   - ブランチ `feature/migrate-integration-test`。PR #1（→ develop）はマージ待ち。
-  - 再実行結果は全緑: `Tests run: 546, Failures: 0, Errors: 0, Skipped: 18` / BUILD SUCCESS。
-    2026-06-25 基準（`69125c3`）へ完全に回帰。判断待ちだった事項1・事項2はいずれも決着済み。
+  - #26 の結果は全緑: `Tests run: 546, Failures: 0, Errors: 0, Skipped: 18` / BUILD SUCCESS。
+    2026-06-25 基準（`69125c3`）・#25 と件数完全一致。Skipped 18件の内訳も #25 と同一。
   - 詳細（jar 証拠・Surefire summary 逐語・Skipped 全件）は `.rn/step4-08-retest/report.md` の
-    「再実行（#54 追随後）」節。同節で既存節の Skipped 集計行の入れ替わりを訂正済み
-    （正: `@Ignore` 10件 / `Assume` 相当 8件）。
-  - 検証用 clone `~/work/nablarch/tmp-step4-08/`（yaml `4837713` / converter `9ab6648`）はリポジトリ外に残置。
-    `~/.m2` はこの2モジュールで install 済みなので、再現時はここを使うか作り直す。
+    「再実行（yaml `#51`・converter `#57` 追随後）」節。
+  - #26 では検証用 clone を作らず、既存作業ツリー `~/work/nablarch/nablarch-testing-yaml`・
+    `~/work/nablarch/nablarch-testing-converter` をそのまま install した（いずれも remote 先端と一致・作業ツリー clean）。
+  - `~/.m2` の nablarch-testing（本体）は 2026-08-21 18:28 の jar のまま。取り直していない。
   - user-deferred な未追跡パス: なし。

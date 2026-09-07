@@ -388,3 +388,140 @@ install 後の `~/.m2`:
 
 テスト実行で `work/` 配下に生成・削除される作業ファイルは `git checkout -- work/` と生成物削除で復元済み。
 `git status --short` は空。
+
+---
+
+# 再実行（yaml `#51`・converter `#57` 追随後）— 2026-09-07
+
+由来: `/home/tie303177/work/cowork/nablarch/ntf-doc-renewal/指示/ntf-step4-18-schema-excel-parity.md` §5（台帳 `#26`）
+
+## S-1. 結論
+
+**全緑。`Tests run: 546, Failures: 0, Errors: 0, Skipped: 18` / BUILD SUCCESS。**
+2026-06-25 基準（`69125c3`）および前節「再実行（#54 追随後）」と件数が完全一致する。
+Failures / Errors は **0件**。モジュール・integration とも一切変更していない。
+
+## S-2. 使った jar の証拠
+
+### S-2-1. 本体 nablarch-testing（取り直し不要と判定）
+
+```
+$ javap -p -classpath ~/.m2/repository/com/nablarch/framework/nablarch-testing/6-NEXT-SNAPSHOT/nablarch-testing-6-NEXT-SNAPSHOT.jar \
+    nablarch.test.core.reader.TestDataParsingTemplate | grep -c "cachedParse\|tryLoadFromCache\|storeToCache"
+3
+
+$ unzip -p ...nablarch-testing-6-NEXT-SNAPSHOT.jar META-INF/MANIFEST.MF | grep Build-Jdk
+Build-Jdk: 17.0.19
+
+$ ls -l --time-style=long-iso ...nablarch-testing-6-NEXT-SNAPSHOT.jar
+-rw-r--r-- 1 tie303177 tie303177 513063 2026-08-21 18:28 .../nablarch-testing-6-NEXT-SNAPSHOT.jar
+```
+
+3メソッドが揃うため PR ブランチ由来。取り直しは行っていない（前節と同一の jar）。
+
+### S-2-2. yaml・converter（既存作業ツリーを install）
+
+本節では検証用 clone を作らず、既存作業ツリーをそのまま使った。いずれも install 直前に
+`git status --short` が空・`git rev-parse HEAD` が remote 先端と一致することを確認済み。
+
+| モジュール | 作業ツリー | ブランチ | HEAD | remote 先端と一致 |
+|---|---|---|---|---|
+| nablarch-testing-yaml | `~/work/nablarch/nablarch-testing-yaml` | `feature/ntf-yaml` | `a404126d4c25bf568916d80d453ab557536946eb` | ○（`origin/feature/ntf-yaml`） |
+| nablarch-testing-converter | `~/work/nablarch/nablarch-testing-converter` | `ntf-test-data-converter` | `8e4410cb1013866e2e3ba96ec7a344fe5febda97` | ○（`origin/ntf-test-data-converter`） |
+
+install（JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64）:
+
+- yaml: `mvn -B -DskipTests clean install` → BUILD SUCCESS（`Total time: 04:23 min` / `Finished at: 2026-09-07T21:29:18+09:00`）
+- converter: `mvn -B clean install` → BUILD SUCCESS（`Total time: 04:43 min` / `Finished at: 2026-09-07T21:34:21+09:00`）。
+  surefire XML から集計した converter の単体テストは `Tests run: 732, Failures: 0, Errors: 0, Skipped: 0`
+
+install 後の `~/.m2`:
+
+```
+-rw-r--r-- 1 tie303177 tie303177  38592 2026-09-07 21:29 .../nablarch-testing-yaml-1.0.0-SNAPSHOT.jar
+-rw-r--r-- 1 tie303177 tie303177 122569 2026-09-07 21:34 .../nablarch-testing-converter-1.0.0-SNAPSHOT.jar
+```
+
+yaml jar の MANIFEST は `Build-Jdk: 17.0.19`。
+
+### S-2-3. スキーマの是正が jar に入っていることの確認
+
+install 前の jar（2026-09-07 16:56 の版）は `$defs.record_fragment.properties.rows` に `"minItems": 1` を持っていた。
+install 後の jar を展開して JSON をパースした結果:
+
+```
+$ unzip -p ...nablarch-testing-yaml-1.0.0-SNAPSHOT.jar nablarch/test/ntf-testdata-yaml-schema.json | \
+    python3 -c '...json.load(...)["$defs"]["record_fragment"]["properties"]["rows"]...'
+rows keys: ['type', 'description', 'items']
+minItems in rows: False
+```
+
+`minItems` は無い。指示書 §5-1 の確認条件を満たす。
+
+## S-3. Surefire summary（逐語）
+
+```
+[INFO] Results:
+[INFO] 
+[WARNING] Tests run: 546, Failures: 0, Errors: 0, Skipped: 18
+[INFO] 
+[INFO] ------------------------------------------------------------------------
+[INFO] BUILD SUCCESS
+[INFO] ------------------------------------------------------------------------
+[INFO] Total time:  07:48 min
+[INFO] Finished at: 2026-09-07T21:42:33+09:00
+[INFO] ------------------------------------------------------------------------
+```
+
+## S-4. Failures / Errors の全件分類
+
+**0件。** 分類対象なし。
+`#24` で Errors 7件が集中した `AbstractHttpRequestTestTemplateYamlTest` は本再実行でも
+`Tests run: 22, Failures: 0, Errors: 0, Skipped: 0`（`Time elapsed: 5.093 s`）で緑。
+
+## S-5. Skipped 全件（18件）
+
+surefire XML から抽出した18件（クラス名昇順）。**前節「再実行（#54 追随後）」の18件と完全一致**
+（クラス・メソッド名・件数とも同一）。2026-06-25 基準（Skipped 18）との件数差は **0**。
+
+| # | テスト | 由来 |
+|---|---|---|
+| 1 | `nablarch.test.TestSupportYamlTest#testGetPathOf` | `@Ignore` |
+| 2 | `nablarch.test.TestSupportYamlTest#testGetPathResourceExisting` | `@Ignore` |
+| 3 | `nablarch.test.core.db.DbAccessTestSupportTest#testSetUpDbOnInvalidExcel_Oracle` | `@TargetDb`（Assume 相当） |
+| 4 | `nablarch.test.core.db.DbAccessTestSupportTest#testSetUpDbOnInvalidExcel_Postgres` | `@TargetDb`（Assume 相当） |
+| 5 | `nablarch.test.core.db.DbAccessTestSupportYamlTest#testSetUpDbOnInvalidExcel_Oracle` | `@TargetDb`（Assume 相当） |
+| 6 | `nablarch.test.core.db.DbAccessTestSupportYamlTest#testSetUpDbOnInvalidExcel_Postgres` | `@TargetDb`（Assume 相当） |
+| 7 | `nablarch.test.core.file.FileSupportWithDbLessTestDataParserYamlTest#testAssertFixedWithDuplicateName` | `@Ignore` |
+| 8 | `nablarch.test.core.file.FileSupportWithDbLessTestDataParserYamlTest#testAssertVariableWithDuplicateName` | `@Ignore` |
+| 9 | `nablarch.test.core.file.FileSupportWithDbLessTestDataParserYamlTest#testSetUpFixedWithDuplicateName` | `@Ignore` |
+| 10 | `nablarch.test.core.file.FileSupportWithDbLessTestDataParserYamlTest#testSetUpVariableWithDuplicateName` | `@Ignore` |
+| 11 | `nablarch.test.core.file.FileSupportYamlTest#testAssertFixedWithDuplicateName` | `@Ignore` |
+| 12 | `nablarch.test.core.file.FileSupportYamlTest#testAssertVariableWithDuplicateName` | `@Ignore` |
+| 13 | `nablarch.test.core.file.FileSupportYamlTest#testSetUpFixedWithDuplicateName` | `@Ignore` |
+| 14 | `nablarch.test.core.file.FileSupportYamlTest#testSetUpVariableWithDuplicateName` | `@Ignore` |
+| 15 | `nablarch.test.core.messaging.RequestTestingMessagingClientTest#testAssertFailNoMatchBody` | `Assume`（JDK 1.6/1.7 限定） |
+| 16 | `nablarch.test.core.messaging.RequestTestingMessagingClientTest#testAssertFailNoMatchHeader` | `Assume`（JDK 1.6/1.7 限定） |
+| 17 | `nablarch.test.core.messaging.RequestTestingMessagingClientYamlTest#testAssertFailNoMatchBody` | `Assume`（JDK 1.6/1.7 限定） |
+| 18 | `nablarch.test.core.messaging.RequestTestingMessagingClientYamlTest#testAssertFailNoMatchHeader` | `Assume`（JDK 1.6/1.7 限定） |
+
+内訳: `@Ignore` 10件 / `Assume` 相当 8件（`Assume` 4件 + `@TargetDb` 4件）。各由来の根拠 `file:line` は
+前節「R-5」および「5. Skipped 全件（18件）」の表に記載したものと同一。
+
+## S-6. 判断を仰ぐ事項
+
+**なし。**
+
+## S-7. 実行条件
+
+| 項目 | 値 |
+|---|---|
+| 作業場 | `/home/tie303177/work/nablarch/nablarch-testing-integration` |
+| ブランチ / HEAD | `feature/migrate-integration-test` / `d2353b7`（テスト実行時点） |
+| JAVA_HOME | `/usr/lib/jvm/temurin-17-jdk-amd64` |
+| コマンド | `JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64 mvn -B clean test` |
+| surefire 設定 | pom のまま（`reuseForks=false` / `forkCount=1`）。変更なし |
+| 所要 | 07:48 min（2026-09-07T21:42:33+09:00 終了） |
+
+テスト実行で生成・削除される作業ファイル（`work/` 配下、`tmp/`）は
+`git checkout -- work/` と生成物削除で復元済み。`git status --short` は空。
