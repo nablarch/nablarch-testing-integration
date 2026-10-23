@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-configuration xmlns="http://tis.co.jp/nablarch/component-configuration"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration ./component-configuration.xsd">
+
+  <import file="nablarch/test/core/http/http-test-configuration-with-htmlcheck.xml"/>
+
+  <component name="excelTestDataParser" class="nablarch.test.core.reader.BasicTestDataParser">
+    <property name="testDataReader">
+      <component class="nablarch.test.core.reader.PoiXlsReader"/>
+    </property>
+    <property name="dbInfo" ref="dbInfo"/>
+    <property name="interpreters" ref="interpreters"/>
+    <property name="defaultValues">
+      <component class="nablarch.test.core.db.BasicDefaultValues"/>
+    </property>
+  </component>
+  <component name="yamlTestDataParser" class="nablarch.test.core.reader.YamlTestDataParser"
+             autowireType="None">
+    <property name="dbInfo" ref="dbInfo"/>
+    <property name="interpreters" ref="yamlInterpreters"/>
+    <property name="defaultValues">
+      <component class="nablarch.test.core.db.BasicDefaultValues"/>
+    </property>
+  </component>
+  <component name="testDataParser" class="nablarch.test.core.reader.FormatAwareTestDataParser">
+    <property name="yamlParser" ref="yamlTestDataParser"/>
+    <property name="excelParser" ref="excelTestDataParser"/>
+  </component>
+
+</component-configuration>

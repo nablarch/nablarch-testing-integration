@@ -15,3 +15,6 @@ buildNumber.properties
 .project
 # JDT-specific (Eclipse Java Development Tools)
 .classpath
+
+# テスト実行時に生成される一時フォーマット出力
+**/core/messaging/format/format/
