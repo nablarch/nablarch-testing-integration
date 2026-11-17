@@ -152,7 +152,7 @@ public class MockMessagingContextTest {
         FilePathSetting filePathSetting = FilePathSetting.getInstance();
         File file = getFile(filePathSetting, "RM11AD0108");
 
-        copyFile(getFile(filePathSetting, "RM11AD0108_original"), file);
+        replaceTestData(getFile(filePathSetting, "RM11AD0108_original"), file);
         
         DataRecord dataRecord = new DataRecord();
         SyncMessage sendSync = MessageSender.sendSync(new SyncMessage("RM11AD0108")
@@ -178,7 +178,7 @@ public class MockMessagingContextTest {
         }
         
         // ファイルの内容を置き換える
-        copyFile(getFile(filePathSetting, "RM11AD0108_timestamp"), file);
+        replaceTestData(getFile(filePathSetting, "RM11AD0108_timestamp"), file);
 
         // CI環境(Unix環境)でも確実にテストが通るように、 lastModified を手動で設定している。
         // Unix環境では lastModified() が秒の精度でしか得られない制限がある。
@@ -192,6 +192,21 @@ public class MockMessagingContextTest {
         .addDataRecord(dataRecord));
         assertEquals("test4", sendSync.getDataRecord().get("failureCode"));
 
+    }
+
+    /**
+     * テストデータを、別のテストデータの内容に差し替える。
+     * <p>
+     * Excel 形式ではテストデータの実体がファイルのため、ファイルをコピーする。
+     * YAML 形式ではテストデータの実体がディレクトリになるため、YAML 版で上書きする。
+     * </p>
+     *
+     * @param source 差し替え元のテストデータ
+     * @param target 差し替え先のテストデータ
+     * @throws Exception 例外
+     */
+    protected void replaceTestData(File source, File target) throws Exception {
+        copyFile(source, target);
     }
 
     /**

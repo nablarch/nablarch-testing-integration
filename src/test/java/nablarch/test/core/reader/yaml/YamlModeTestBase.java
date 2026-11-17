@@ -158,6 +158,36 @@ public final class YamlModeTestBase {
     }
 
     /**
+     * ディレクトリ直下の Excel のブックを、すべて YAML に変換する。
+     *
+     * <p>
+     * テストクラスと対にならない Excel（例: 同期送信の応答電文を、リクエストIDごとのブックに書いたもの）を、
+     * テストの実行時に変換するために使う。変換結果は {@code outputDir/<ブック名>/<シート名>.yaml} に出力する。
+     * </p>
+     *
+     * @param inputDir         変換元の Excel を置いたディレクトリ
+     * @param outputDir        変換先のディレクトリ
+     * @param excludeWorkbooks 変換の対象外にするブックのファイル名（変換ツールが読めない異常系のデータなど）
+     * @throws IllegalStateException 変換元の Excel が 1 つも無い場合
+     */
+    public static void convertDirectory(Path inputDir, Path outputDir, String... excludeWorkbooks) {
+        java.util.List<String> excluded = java.util.Arrays.asList(excludeWorkbooks);
+        String[] fileNames;
+        try (Stream<Path> list = Files.list(inputDir)) {
+            fileNames = list.map(p -> p.getFileName().toString())
+                    .filter(name -> name.endsWith(".xls") || name.endsWith(".xlsx"))
+                    .filter(name -> !excluded.contains(name))
+                    .sorted()
+                    .toArray(String[]::new);
+        } catch (IOException e) {
+            throw new UncheckedIOException(e);
+        }
+        if (fileNames.length == 0 || convert(inputDir, outputDir, new String[0], fileNames) == 0) {
+            throw new IllegalStateException("Excel not found under " + inputDir);
+        }
+    }
+
+    /**
      * 変換ツールで、指定したファイル名の Excel を YAML に変換する。
      *
      * @param inputDir      変換元の Excel を置いたディレクトリ

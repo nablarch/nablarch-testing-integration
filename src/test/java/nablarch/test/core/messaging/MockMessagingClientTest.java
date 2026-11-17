@@ -44,8 +44,34 @@ import org.junit.Test;
 public class MockMessagingClientTest {
 
     @Rule
-    public SystemRepositoryResource repositoryResource = new SystemRepositoryResource(
-            "nablarch/test/core/messaging/web/web-component-configuration.xml");
+    public SystemRepositoryResource repositoryResource = new SystemRepositoryResource(getTestConfig());
+
+    /**
+     * コンポーネント設定ファイルを返す。YAML 版で、YAML 形式用の設定に上書きする。
+     *
+     * @return コンポーネント設定ファイル
+     */
+    protected String getTestConfig() {
+        return "nablarch/test/core/messaging/web/web-component-configuration.xml";
+    }
+
+    /**
+     * {@link #testNormalSJIS()} に使うコンポーネント設定ファイルを返す。YAML 版で、YAML 形式用の設定に上書きする。
+     *
+     * @return コンポーネント設定ファイル
+     */
+    protected String getSjisConfig() {
+        return "nablarch/test/core/messaging/web/web-component-configuration-sjis.xml";
+    }
+
+    /**
+     * {@link #testNormalNoCharset()} に使うコンポーネント設定ファイルを返す。YAML 版で、YAML 形式用の設定に上書きする。
+     *
+     * @return コンポーネント設定ファイル
+     */
+    protected String getNoCharsetConfig() {
+        return "nablarch/test/core/messaging/web/web-component-configuration-nocharset.xml";
+    }
 
     /** 初期化を行う */
     @Before
@@ -249,8 +275,7 @@ public class MockMessagingClientTest {
 
         //Shift-JISで設定を読み込む。
         SystemRepository.clear();
-        XmlComponentDefinitionLoader loader = new XmlComponentDefinitionLoader("nablarch/test/core/messaging/web/web" +
-                "-component-configuration-sjis.xml");
+        XmlComponentDefinitionLoader loader = new XmlComponentDefinitionLoader(getSjisConfig());
         DiContainer container = new DiContainer(loader);
         SystemRepository.load(container);
 
@@ -287,8 +312,7 @@ public class MockMessagingClientTest {
 
         //Charset指定なしで設定を読み込む。
         SystemRepository.clear();
-        XmlComponentDefinitionLoader loader = new XmlComponentDefinitionLoader("nablarch/test/core/messaging/web/web" +
-                "-component-configuration-nocharset.xml");
+        XmlComponentDefinitionLoader loader = new XmlComponentDefinitionLoader(getNoCharsetConfig());
         DiContainer container = new DiContainer(loader);
         SystemRepository.load(container);
 

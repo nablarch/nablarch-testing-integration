@@ -96,6 +96,13 @@ static のフィールドは上書きできないため、`getTestConfig()` は�
 
 パスの解決など、データの形式によらないテストは、YAML 版では `@Ignore` にします。
 
+### 型 9: テストクラスと対にならない Excel を読む
+
+取引単体テストの同期送信の応答電文（リクエストIDごとのブック）や、マスタデータのように、テストクラスと同名でない Excel を読むテストは、`prepareYamlData` の代わりに `YamlModeTestBase.convertDirectory(...)`（ディレクトリ内のブックをすべて変換）か `YamlModeTestBase.convertWorkbook(...)`（ブックを 1 つ変換）で変換し、変換先を読む設定にします。
+
+- 同期送信の応答電文は、解説書どおり、`messagingTestDataParser` を `YamlTestDataParser`（`compositeInterpreter` だけ）にし、`sendSyncTestData` に拡張子を設定しない設定（`web-component-configuration-yaml.xml`）で読みます。YAML ではテストデータの実体がリクエストIDと同名のディレクトリになるため、テストデータを差し替えるテストは、ディレクトリの中身を差し替えます
+- マスタデータは、変換ツールがブックをシートごとの YAML に分けて出力するため、シートごとの YAML をそれぞれマスタデータファイルとして渡します（YAML 形式のマスタデータは 1 ファイルが 1 データセクション）
+
 ## YAML 版の一覧
 
 | YAML 版 | 設定ファイル | 型 |
@@ -120,6 +127,9 @@ static のフィールドは上書きできないため、`getTestConfig()` は�
 | `RequestTestingMessagingContextYamlTest` | `unit-test-format-aware.xml` | 1・2・3 |
 | `RequestTestingSendSyncBatchYamlTest` | `unit-test-format-aware.xml` | 1・2・3・6 |
 | `RequestTestingSendSyncSupportYamlTest` | `unit-test-format-aware.xml` | 1・2 |
+| `MockMessagingClientYamlTest` | `nablarch/test/core/messaging/web/web-component-configuration-yaml.xml`（ほかに `-sjis-yaml.xml`・`-nocharset-yaml.xml`） | 5・7・9 |
+| `MockMessagingContextYamlTest` | `nablarch/test/core/messaging/web/web-component-configuration-yaml.xml` | 4・5・9 |
+| `MasterDataSetUpperYamlTest` | `unit-test-yaml.xml` | 4・5・8・9 |
 
 ### `@Ignore` にしているテスト
 
@@ -127,6 +137,22 @@ static のフィールドは上書きできないため、`getTestConfig()` は�
 |---|---|---|
 | `TestSupportYamlTest` | `testGetPathOf`・`testGetPathResourceExisting` | パスの解決のテストで、データの形式によらない（型 8） |
 | `FileSupportYamlTest`・`FileSupportWithDbLessTestDataParserYamlTest` | `testSetUpFixedWithDuplicateName`・`testAssertFixedWithDuplicateName`・`testSetUpVariableWithDuplicateName`・`testAssertVariableWithDuplicateName`（各 4 件） | 重複したフィールド名のデータは変換ツールの中間モデルにできない（型 7）。YAML で重複名を弾くことは、nablarch-testing-yaml の `YamlFileBuilderTest` で確かめている |
+| `MockMessagingClientYamlTest` | `testInvalidEncode` | 不正な文字コードを書いた応答電文（`RM11AC0297.xls`）は、変換ツールが読めないため変換の対象外（型 7）。YAML 形式で不正な文字コードを書いた場合の動作は確かめていない |
+| `MasterDataSetUpperYamlTest` | `testMainWithoutArgs`・`testMainTooManyArgs`・`testSetUpMasterDataFromNonExcelFile`・`testGetAllTableDataFromFileWithNoExtension`・`testWarnWhenNoTableDataWasRead` | 起動引数の検査、タブ区切りテキストのマスタデータ、モックのパーサを使うテストで、データの形式によらない（型 8） |
+
+## YAML 版の無いテスト
+
+本リポジトリの目的は、Excel を変換した YAML で同じ結果になることを確かめることです。このため、テストデータ（Excel）を読むテストだけを本体から写し、YAML 版を作ります。テストデータを読まないテストは、本体と同じテストを流すだけになるので写しません。
+
+YAML 版の無いテストは、`TableDataSorterTest` だけです。テストデータを読みませんが、`DbAccessTestSupportTest` から使うため残しています。
+
+本体のテストのうち、次のものは写していません。
+
+| テスト | 写さない理由 |
+|---|---|
+| テストデータを読まないテスト（`ServletForwardVerifierTest`・`MessagePoolTest` など） | Excel と YAML で結果が変わらず、本体と同じテストを流すだけになる |
+| Excel の読み込み自体のテスト（`PoiXlsReaderTest`・`MessageParserTest` など） | `PoiXlsReader` など Excel 用の部品を直接組み立てて試すテストで、YAML 版を作る意味が無い |
+| `SendSyncSupportTest` | テストデータが Excel ではなく手書きのタブ区切りテキストで、変換ツールを通らない。YAML のディレクトリ形式のテストデータを読み直すことは、`MockMessagingContextYamlTest`（`test6`）で確かめる |
 
 ## nablarch-testing 本体からの変更点
 
@@ -142,10 +168,12 @@ Excel 版は本体のテストを写したものですが、YAML 版から設定
    | `AbstractHttpRequestTestTemplateTest` | `initializeRepositoryForEmptyTestCase()`・`restoreRepositoryAfterEmptyTestCase()` | `testGetEmptyTestCase` の前後のリポジトリの初期化 |
    | `MessagingReceiveTestSupportTest` | `createUnExtendedSupport()` | `testUnExtends` で使う `MessagingReceiveTestSupport` の生成 |
    | `RequestTestingSendSyncBatchTest` | `getTestDataDir()` | 期待するエラーメッセージに含まれるテストデータのパス（クラス名は `getClass()` から組み立てる） |
+   | `MockMessagingClientTest` | `getTestConfig()`・`getSjisConfig()`・`getNoCharsetConfig()` | 設定ファイル（テストの中で作り直すものを含む） |
+   | `MockMessagingContextTest` | `replaceTestData(File, File)` | `test6` でテストデータを差し替える処理（YAML ではディレクトリになる） |
+   | `MasterDataSetUpperTest` | `getTestConfig()`・`getMasterDataFiles()`・`getFamilyMasterDataFiles()` | 設定ファイルと、投入するマスタデータファイル |
 
 4. `TestSupportTest` は、エラーメッセージに含まれる探索パスが YAML 版では違うため、パスの手前までを比べるようにした
 5. `TestBeanTest` は、メッセージが実行環境の言語に左右されないよう、言語を日本語に固定した
-6. `TestCaseInfoTest` に、異常系のテストを 5 件足した
 
 ## 実行方法
 
