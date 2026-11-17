@@ -50,26 +50,20 @@
     </component>
   </list>
 
-  <!-- YAML 用インタープリタリスト（QuotationTrimmer を含まない）
-       YAML 1.2 ではライブラリがダブルクォートを構文として処理済みで返すため、
-       QuotationTrimmer は不要かつ二重処理になる。 -->
+  <!-- YAML 形式用のインタープリタ。解説書（テストデータの形式をYAMLに変更する）のとおり、
+       システム時刻記法・文字列増幅の 2 つだけを、この順に指定する。
+       null・ダブルクォート・改行は YAML の構文が担うため、NullInterpreter・QuotationTrimmer・
+       LineSeparatorInterpreter は指定しない。 -->
   <list name="yamlInterpreters">
-    <!-- null変換 -->
-    <component class="nablarch.test.core.util.interpreter.NullInterpreter"/>
     <!-- システム時刻記法 -->
-    <component
-            class="nablarch.test.core.util.interpreter.DateTimeInterpreter">
+    <component class="nablarch.test.core.util.interpreter.DateTimeInterpreter">
       <property name="systemTimeProvider" ref="dateProvider"/>
     </component>
-    <!-- 改行コードを変換する -->
-    <component class="nablarch.test.core.util.interpreter.LineSeparatorInterpreter"/>
     <!-- 文字列増幅 -->
-    <component
-            class="nablarch.test.core.util.interpreter.CompositeInterpreter">
+    <component class="nablarch.test.core.util.interpreter.CompositeInterpreter">
       <property name="interpreters">
         <list>
-          <component
-                  class="nablarch.test.core.util.interpreter.BasicJapaneseCharacterInterpreter"/>
+          <component class="nablarch.test.core.util.interpreter.BasicJapaneseCharacterInterpreter"/>
         </list>
       </property>
     </component>

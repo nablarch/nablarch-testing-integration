@@ -14,14 +14,13 @@
     <property name="interpreters" ref="interpreters" />
   </component>
   <!-- YAML 用実体 -->
-  <component name="yamlTestDataParser" class="nablarch.test.core.reader.YamlTestDataParser"
-             autowireType="None">
+  <component name="yamlTestDataParser" class="nablarch.test.core.reader.YamlTestDataParser">
     <property name="interpreters" ref="yamlInterpreters" />
-    <property name="defaultValues">
-      <component class="nablarch.test.core.db.BasicDefaultValues"/>
-    </property>
   </component>
   <!-- 形式に応じて委譲するラッパー -->
+  <!-- FormatAwareTestDataParser は本リポジトリの src/test にだけあるクラスで、解説書には無い。
+       解説書は 1 つのプロジェクトで Excel 形式と YAML 形式を混在させないが、本リポジトリは両形式のテストを
+       同じ設定で流すため、テストが宣言した形式に応じて委譲先を切り替える。 -->
   <component name="testDataParser" class="nablarch.test.core.reader.FormatAwareTestDataParser">
     <property name="yamlParser" ref="yamlTestDataParser"/>
     <property name="excelParser" ref="excelTestDataParser"/>
@@ -43,12 +42,20 @@
     </component>
   </list>
 
-  <!-- YAML 用インタープリタリスト（QuotationTrimmer を含まない）
-       YAML 1.2 ではライブラリがダブルクォートを構文として処理済みで返すため、
-       QuotationTrimmer は不要かつ二重処理になる。 -->
+  <!-- YAML 形式用のインタープリタ。解説書（テストデータの形式をYAMLに変更する）のとおり、
+       システム時刻記法・文字列増幅の 2 つだけを、この順に指定する。
+       null・ダブルクォート・改行は YAML の構文が担うため、NullInterpreter・QuotationTrimmer・
+       LineSeparatorInterpreter は指定しない。 -->
   <list name="yamlInterpreters">
-    <!-- null変換 -->
-    <component class="nablarch.test.core.util.interpreter.NullInterpreter"/>
+    <!-- システム時刻記法。このファイルは時刻プロバイダを定義しない設定（web-component-configuration.xml など）からも
+         読み込まれるため、時刻プロバイダをここで定義する（値は override.xml の systemTimeProvider と同じ）。 -->
+    <component class="nablarch.test.core.util.interpreter.DateTimeInterpreter">
+      <property name="systemTimeProvider">
+        <component class="nablarch.test.FixedSystemTimeProvider">
+          <property name="fixedDate" value="20100913123456"/>
+        </component>
+      </property>
+    </component>
     <!-- 文字列増幅 -->
     <component class="nablarch.test.core.util.interpreter.CompositeInterpreter">
       <property name="interpreters">

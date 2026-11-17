@@ -20,16 +20,15 @@
   </component>
 
   <!-- YAML 用パーサ -->
-  <component name="yamlTestDataParser" class="nablarch.test.core.reader.YamlTestDataParser"
-             autowireType="None">
+  <component name="yamlTestDataParser" class="nablarch.test.core.reader.YamlTestDataParser">
     <property name="dbInfo" ref="dbInfo"/>
     <property name="interpreters" ref="yamlInterpreters"/>
-    <property name="defaultValues">
-      <component class="nablarch.test.core.db.BasicDefaultValues"/>
-    </property>
   </component>
 
   <!-- 形式に応じて委譲先を切り替えるプロキシ（testDataParser を上書き） -->
+  <!-- FormatAwareTestDataParser は本リポジトリの src/test にだけあるクラスで、解説書には無い。
+       解説書は 1 つのプロジェクトで Excel 形式と YAML 形式を混在させないが、本リポジトリは両形式のテストを
+       同じ設定で流すため、テストが宣言した形式に応じて委譲先を切り替える。 -->
   <component name="testDataParser" class="nablarch.test.core.reader.FormatAwareTestDataParser">
     <property name="yamlParser" ref="yamlTestDataParser"/>
     <property name="excelParser" ref="excelTestDataParser"/>
