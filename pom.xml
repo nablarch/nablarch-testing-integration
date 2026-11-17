@@ -25,40 +25,18 @@
     <dependency>
       <groupId>com.nablarch.framework</groupId>
       <artifactId>nablarch-testing-yaml</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.nablarch.framework</groupId>
       <artifactId>nablarch-testing-converter</artifactId>
+      <scope>test</scope>
     </dependency>
 
     <dependency>
       <groupId>com.nablarch.framework</groupId>
       <artifactId>nablarch-testing</artifactId>
-    </dependency>
-
-    <dependency>
-      <groupId>org.apache.poi</groupId>
-      <artifactId>poi-ooxml</artifactId>
-      <version>3.8</version>
-    </dependency>
-
-    <dependency>
-      <groupId>org.snakeyaml</groupId>
-      <artifactId>snakeyaml-engine</artifactId>
-      <version>3.0.1</version>
-    </dependency>
-
-    <dependency>
-      <groupId>com.networknt</groupId>
-      <artifactId>json-schema-validator</artifactId>
-      <version>1.5.9</version>
-    </dependency>
-
-    <dependency>
-      <groupId>junit</groupId>
-      <artifactId>junit</artifactId>
-      <version>4.13.1</version>
       <scope>test</scope>
     </dependency>
 
@@ -86,6 +64,7 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- テストの DB（H2 のインメモリ DB）。コンポーネント設定から実行時に使う -->
     <dependency>
       <groupId>com.h2database</groupId>
       <artifactId>h2</artifactId>
@@ -117,30 +96,35 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- コンポーネント設定から DbConnectionManagementHandler などを使う -->
     <dependency>
       <groupId>com.nablarch.framework</groupId>
       <artifactId>nablarch-common-jdbc</artifactId>
       <scope>test</scope>
     </dependency>
 
+    <!-- Bean Validation の実装。TestBeanTest などのテストで使う -->
     <dependency>
       <groupId>org.hibernate.validator</groupId>
       <artifactId>hibernate-validator</artifactId>
       <scope>test</scope>
     </dependency>
 
+    <!-- hibernate-validator がメッセージの組み立てに使う EL の実装 -->
     <dependency>
       <groupId>org.glassfish.expressly</groupId>
       <artifactId>expressly</artifactId>
       <scope>test</scope>
     </dependency>
 
+    <!-- HTTP リクエスト単体テストで、Servlet API のクラスを使う -->
     <dependency>
       <groupId>jakarta.servlet</groupId>
       <artifactId>jakarta.servlet-api</artifactId>
       <scope>test</scope>
     </dependency>
 
+    <!-- コンポーネント設定から FastTableIdGenerator を使う -->
     <dependency>
       <groupId>com.nablarch.framework</groupId>
       <artifactId>nablarch-common-idgenerator-jdbc</artifactId>
@@ -153,6 +137,7 @@
       <scope>test</scope>
     </dependency>
 
+    <!-- MOM によるメッセージングのテストで、コンポーネント設定から JmsMessagingProvider などを使う（テストのコードが使う nablarch-fw-batch もここから入る） -->
     <dependency>
       <groupId>com.nablarch.framework</groupId>
       <artifactId>nablarch-fw-messaging-mom</artifactId>
