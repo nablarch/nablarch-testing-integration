@@ -10,7 +10,9 @@ Maven Central にはデプロイしません（`src/main` はありません）�
 
 ## テストコードの出自
 
-テストコードは nablarch-testing の既存テストコード（[`nablarch/nablarch-testing@6aa6989`](https://github.com/nablarch/nablarch-testing/commit/6aa6989)）をベースにしています。結合テストを新規作成するのではなく、NTF本体の既存テストコードを流用することで、本体テストと同一のテストロジックを両形式で実行できるようにしています。
+テストコードは、nablarch-testing のテストコードを写したものです。結合テストを新規作成するのではなく、NTF本体の既存テストコードを流用することで、本体テストと同一のテストロジックを両形式で実行できるようにしています。
+
+2026-11-17 時点で、写したファイルは「nablarch-testing 本体からの変更点」に書いた変更を除いて、nablarch-testing の [`41e8efe`](https://github.com/nablarch/nablarch-testing/commit/41e8efe)（ブランチ `NAB-682/convert-testdata-excel-to-text`）の同じパスのファイルと同じ内容です。写し直したときは、このコミットを書き換えてください。
 
 ## テストの構造
 
@@ -186,6 +188,25 @@ surefire で、テストクラスごとに JVM を分けています（`reuseFor
 ```bash
 mvn test -Dtest=TestSupportYamlTest
 ```
+
+## 運用
+
+本リポジトリは Maven Central にデプロイしないため、リリースの成果物からは見えません。本体の変更に追従できなくならないよう、次のときに `mvn test` を流してください。
+
+- nablarch-testing・nablarch-testing-yaml・nablarch-testing-converter のいずれかを変更したリリースの前
+- 上の 3 つのリポジトリで、テストデータの読み込み・変換に関わる変更をしたとき
+
+依存する 3 つのモジュールの版は親 POM（BOM）で決まるので、まだリリースしていない変更を確かめるときは、各リポジトリの対象のブランチを `mvn install` してから流します。
+
+### 本体のテストを写し直す
+
+本体のテストが変わったときは、次の手順で写し直します。
+
+1. 「テストコードの出自」のコミットと、本体の今のコミットの間で、本リポジトリに写したファイルの差分を取る（`git diff <出自のコミット> HEAD -- <写したファイル>`）
+2. 差分を本リポジトリのファイルに当てる。「nablarch-testing 本体からの変更点」に書いた変更（`getTestConfig()` などのメソッド）は残す
+3. 本体に、テストデータ（Excel）を読むテストが増えた場合は、「YAML 版の作り方」に沿って YAML 版を足す。テストデータを読まないテストは写さない（「YAML 版の無いテスト」）
+4. `mvn test` で、Excel 版・YAML 版の両方が通ることを確かめる。YAML 版だけが失敗する場合は、変換ツールか nablarch-testing-yaml の不具合の可能性があるので、テストの期待値を合わせて通すことはしない
+5. 「テストコードの出自」のコミットを書き換える
 
 ## 今後の課題
 
