@@ -1,11 +1,10 @@
 package nablarch.test.core.reader;
 
-import nablarch.test.core.reader.YamlTestDataParser;
+import nablarch.test.core.db.DbInfo;
 import nablarch.test.core.db.TableData;
 import nablarch.test.core.db.TestTable;
-import nablarch.test.core.db.BasicDefaultValues;
-import nablarch.test.core.db.DbInfo;
-import nablarch.test.core.db.DefaultValues;
+import nablarch.test.core.reader.yaml.YamlModeTestBase;
+import nablarch.test.core.util.interpreter.TestDataInterpreter;
 import nablarch.test.support.SystemRepositoryResource;
 import nablarch.test.support.db.helper.DatabaseTestRunner;
 import nablarch.test.support.db.helper.VariousDbTestHelper;
@@ -16,6 +15,11 @@ import org.junit.ClassRule;
 import org.junit.Test;
 import org.junit.runner.RunWith;
 
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.nio.file.Paths;
+import java.nio.file.StandardCopyOption;
 import java.util.Arrays;
 import java.util.HashSet;
 import java.util.List;
@@ -28,59 +32,69 @@ import static org.junit.Assert.assertNull;
 import static org.junit.Assert.assertThat;
 
 /**
- * V-1: Excel → YAML 変換後の等価性確認テスト（統合テスト）。
+ * Excel のテストデータと、それを変換ツールで変換した YAML のテストデータを読んだ結果が一致することを確かめる。
  *
  * <p>
- * 変換ツールで Excel を YAML に変換した結果を {@link YamlTestDataParser} で読み込み、
- * {@code BasicTestDataParser} で Excel を読み込んだ結果と等価であることを確認する。
+ * テストの実行時に、{@code BasicTestDataParserTest.xls} を変換ツールで YAML に変換する
+ * （出力先: {@value #YAML_DIR}）。変換前の Excel は {@link BasicTestDataParser} で、
+ * 変換後の YAML は {@link YamlTestDataParser} で読み、結果を比べる。
  * </p>
  *
- * <p>テストデータの配置:
- * {@code src/test/java/nablarch/test/core/reader/BasicTestDataParserTest/*.yaml}
- * は {@code BasicTestDataParserTest.xls} を変換ツールで変換して生成したもの。
+ * <p>一致の定義: テーブル名・カラム数・カラム名の集合・行数・全カラムの値が一致すること。
+ * {@link #assertEquivalentTable} は、Excel 側にだけあるカラムと YAML 側にだけあるカラムの両方を検出する。
  * </p>
  *
- * <p>等価性の定義: 「テーブル名・カラム数・カラム名集合・行数・全カラムの値が双方で一致すること」。
- * ヘルパー {@link #assertEquivalentTable} が両方向（Excel 側の余分カラム・YAML 側の余分カラム）を検出する。
- * </p>
- *
- * <p>対象外シートと除外理由:
+ * <p>対象外のシートと理由:
  * <ul>
- *   <li>{@code convertedValues}: ランダム値インタープリタ（{@code ${半角数字,...}} 等）を含み、
- *       Excel と YAML を別々に評価すると乱数が異なる値になるため等価比較が不可能。
- *       決定的な {@code ${binaryFile:...}} 行は別テスト（{@link #binaryFileInterpreter_equivalentToExcel}）で補完確認。</li>
+ *   <li>{@code convertedValues}: 乱数を生成する記法（{@code ${半角数字,...}} など）を含み、
+ *       Excel と YAML を別々に読むと値が異なるため比べられない。
+ *       乱数を含まない {@code ${binaryFile:...}} は {@link #binaryFileInterpreter_equivalentToExcel} で確かめる。</li>
  * </ul>
  * </p>
  */
 @RunWith(DatabaseTestRunner.class)
 public class ExcelToYamlEquivalenceTest {
 
+    /** Excel 版の設定（{@code testDataParser} は {@link BasicTestDataParser}）。 */
     @ClassRule
-    public static SystemRepositoryResource repositoryResource = new SystemRepositoryResource("unit-test-yaml.xml");
+    public static SystemRepositoryResource repositoryResource = new SystemRepositoryResource("unit-test.xml");
 
+    /** 変換元の Excel を置いたディレクトリ。 */
     private static final String DIR = "src/test/java/nablarch/test/core/reader/";
+
+    /** 変換した YAML の出力先。 */
+    private static final String YAML_DIR = YamlModeTestBase.YAML_ROOT + "/nablarch/test/core/reader/";
+
+    /** 変換元の Excel のファイル名。 */
+    private static final String WORKBOOK = "BasicTestDataParserTest.xls";
 
     private TestDataParser xlsParser;
     private YamlTestDataParser yamlParser;
 
     @BeforeClass
-    public static void beforeClass() {
+    public static void beforeClass() throws IOException {
         VariousDbTestHelper.createTable(TestTable.class);
+
+        Path inputDir = Paths.get(DIR);
+        Path outputDir = Paths.get(YAML_DIR);
+        YamlModeTestBase.convertWorkbook(inputDir, WORKBOOK, outputDir);
+        // ${binaryFile:...} は読み込み元のディレクトリを基準に解決されるため、参照先のファイルを変換先へ複製する
+        for (String binaryFile : new String[] {"testdata.txt", WORKBOOK}) {
+            Files.copy(inputDir.resolve(binaryFile), outputDir.resolve(binaryFile), StandardCopyOption.REPLACE_EXISTING);
+        }
     }
 
     @Before
     public void before() {
         xlsParser = repositoryResource.getComponent("testDataParser");
+        assertThat("Excel 側は BasicTestDataParser で読む",
+                xlsParser.getClass().getName(), is(BasicTestDataParser.class.getName()));
 
         DbInfo dbInfo = repositoryResource.getComponent("dbInfo");
-        DefaultValues defaultValues = new BasicDefaultValues();
-        List<nablarch.test.core.util.interpreter.TestDataInterpreter> interpreters =
-                repositoryResource.getComponent("interpreters");
-
+        List<TestDataInterpreter> yamlInterpreters = repositoryResource.getComponent("yamlInterpreters");
         yamlParser = new YamlTestDataParser();
         yamlParser.setDbInfo(dbInfo);
-        yamlParser.setDefaultValues(defaultValues);
-        yamlParser.setInterpreters(interpreters);
+        yamlParser.setInterpreters(yamlInterpreters);
     }
 
     @After
@@ -93,7 +107,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/withoutGroupId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/withoutGroupId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getExpectedTableData() を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と件数・テーブル名・カラム集合・行数・値が等価である
      */
@@ -102,7 +116,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/withoutGroupId");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -116,7 +130,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/withoutGroupId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/withoutGroupId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getSetupTableData() を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である
      */
@@ -125,7 +139,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getSetupTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
-        List<TableData> fromYaml = yamlParser.getSetupTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
+        List<TableData> fromYaml = yamlParser.getSetupTableData(YAML_DIR, "BasicTestDataParserTest/withoutGroupId");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -135,7 +149,7 @@ public class ExcelToYamlEquivalenceTest {
     }
 
     /**
-     * Given: BasicTestDataParserTest/withoutGroupId.yaml が配置されている<br>
+     * Given: BasicTestDataParserTest/withoutGroupId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getSetupTableData() を呼ぶ<br>
      * Then:  NULL 変換（"Null" → null）が Excel と YAML の両方で等しく機能していること
      */
@@ -144,7 +158,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getSetupTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
-        List<TableData> fromYaml = yamlParser.getSetupTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
+        List<TableData> fromYaml = yamlParser.getSetupTableData(YAML_DIR, "BasicTestDataParserTest/withoutGroupId");
 
         // Then: withoutGroupId の SETUP_TABLE 1件目 2行目: VARCHAR2_COL が "Null" → null に変換される（IV 仕様）
         TableData xlsTable = fromXls.get(0);
@@ -158,7 +172,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/withGroupId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/withGroupId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getExpectedTableData(groupId="case01") を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である
      */
@@ -167,7 +181,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withGroupId", "case01");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withGroupId", "case01");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/withGroupId", "case01");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -177,7 +191,7 @@ public class ExcelToYamlEquivalenceTest {
     }
 
     /**
-     * Given: BasicTestDataParserTest/withGroupId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/withGroupId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getExpectedTableData(groupId="case02") を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である
      */
@@ -186,7 +200,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withGroupId", "case02");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withGroupId", "case02");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/withGroupId", "case02");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -200,7 +214,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/withGroupId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/withGroupId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getSetupTableData(groupId="case01") を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である
      */
@@ -209,7 +223,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getSetupTableData(DIR, "BasicTestDataParserTest/withGroupId", "case01");
-        List<TableData> fromYaml = yamlParser.getSetupTableData(DIR, "BasicTestDataParserTest/withGroupId", "case01");
+        List<TableData> fromYaml = yamlParser.getSetupTableData(YAML_DIR, "BasicTestDataParserTest/withGroupId", "case01");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -219,7 +233,7 @@ public class ExcelToYamlEquivalenceTest {
     }
 
     /**
-     * Given: BasicTestDataParserTest/withGroupId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/withGroupId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getSetupTableData(groupId="case02") を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である
      */
@@ -228,7 +242,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getSetupTableData(DIR, "BasicTestDataParserTest/withGroupId", "case02");
-        List<TableData> fromYaml = yamlParser.getSetupTableData(DIR, "BasicTestDataParserTest/withGroupId", "case02");
+        List<TableData> fromYaml = yamlParser.getSetupTableData(YAML_DIR, "BasicTestDataParserTest/withGroupId", "case02");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -242,7 +256,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/getListMap.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/getListMap.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getListMap("params") を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である
      */
@@ -251,14 +265,14 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<Map<String, String>> fromXls = xlsParser.getListMap(DIR, "BasicTestDataParserTest/getListMap", "params");
-        List<Map<String, String>> fromYaml = yamlParser.getListMap(DIR, "BasicTestDataParserTest/getListMap", "params");
+        List<Map<String, String>> fromYaml = yamlParser.getListMap(YAML_DIR, "BasicTestDataParserTest/getListMap", "params");
 
         // Then
         assertEquivalentListMap(fromXls, fromYaml, "getListMap_params");
     }
 
     /**
-     * Given: BasicTestDataParserTest/getListMap.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/getListMap.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getListMap("empty_cell") を呼ぶ<br>
      * Then:  空文字列セルが Excel と YAML の両方で等しく扱われる
      */
@@ -267,7 +281,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<Map<String, String>> fromXls = xlsParser.getListMap(DIR, "BasicTestDataParserTest/getListMap", "empty_cell");
-        List<Map<String, String>> fromYaml = yamlParser.getListMap(DIR, "BasicTestDataParserTest/getListMap", "empty_cell");
+        List<Map<String, String>> fromYaml = yamlParser.getListMap(YAML_DIR, "BasicTestDataParserTest/getListMap", "empty_cell");
 
         // Then
         assertEquivalentListMap(fromXls, fromYaml, "getListMap_emptyCell");
@@ -278,7 +292,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/invisibleTail.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/invisibleTail.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getListMap("expectedUgroup") を呼ぶ<br>
      * Then:  末尾不可視セルが除去され、Excel と YAML の読み込み結果が等価である
      */
@@ -287,14 +301,14 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<Map<String, String>> fromXls = xlsParser.getListMap(DIR, "BasicTestDataParserTest/invisibleTail", "expectedUgroup");
-        List<Map<String, String>> fromYaml = yamlParser.getListMap(DIR, "BasicTestDataParserTest/invisibleTail", "expectedUgroup");
+        List<Map<String, String>> fromYaml = yamlParser.getListMap(YAML_DIR, "BasicTestDataParserTest/invisibleTail", "expectedUgroup");
 
         // Then
         assertEquivalentListMap(fromXls, fromYaml, "invisibleTail_listmap");
     }
 
     /**
-     * Given: BasicTestDataParserTest/invisibleTail.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/invisibleTail.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getExpectedTableData() を呼ぶ<br>
      * Then:  末尾不可視セルが除去され、Excel と YAML の読み込み結果が等価である
      */
@@ -303,7 +317,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/invisibleTail");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/invisibleTail");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/invisibleTail");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -317,7 +331,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/completedWithoutId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/completedWithoutId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getExpectedTableData() を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である
      */
@@ -326,7 +340,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/completedWithoutId");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/completedWithoutId");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/completedWithoutId");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -336,7 +350,7 @@ public class ExcelToYamlEquivalenceTest {
     }
 
     /**
-     * Given: BasicTestDataParserTest/completedWithId.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/completedWithId.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getExpectedTableData(groupId="with_ID") を呼ぶ<br>
      * Then:  BasicTestDataParser で Excel を読んだ結果と等価である（デフォルト値補完含む）
      */
@@ -345,7 +359,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/completedWithId", "with_ID");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/completedWithId", "with_ID");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/completedWithId", "with_ID");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -359,7 +373,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/markerColumn.yaml が配置されている（.xls から変換済み、[no]/[desc] を含む）<br>
+     * Given: BasicTestDataParserTest/markerColumn.yaml を、テストの実行時に .xls から変換している（.xls には [no]/[desc] がある）<br>
      * When:  YamlTestDataParser で getListMap("params") を呼ぶ<br>
      * Then:  [no]/[desc] マーカーカラムが除外され、Excel と YAML の読み込み結果が等価である
      */
@@ -368,7 +382,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<Map<String, String>> fromXls = xlsParser.getListMap(DIR, "BasicTestDataParserTest/markerColumn", "params");
-        List<Map<String, String>> fromYaml = yamlParser.getListMap(DIR, "BasicTestDataParserTest/markerColumn", "params");
+        List<Map<String, String>> fromYaml = yamlParser.getListMap(YAML_DIR, "BasicTestDataParserTest/markerColumn", "params");
 
         // Then
         assertEquivalentListMap(fromXls, fromYaml, "markerColumn_listmap");
@@ -380,7 +394,7 @@ public class ExcelToYamlEquivalenceTest {
     }
 
     /**
-     * Given: BasicTestDataParserTest/markerColumn.yaml が配置されている（.xls から変換済み）<br>
+     * Given: BasicTestDataParserTest/markerColumn.yaml を、テストの実行時に .xls から変換している<br>
      * When:  YamlTestDataParser で getExpectedTableData() を呼ぶ<br>
      * Then:  [no]/[desc] マーカーカラムが除外され、Excel と YAML の読み込み結果が等価である
      */
@@ -389,7 +403,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/markerColumn");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/markerColumn");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/markerColumn");
 
         // Then
         assertThat("テーブル数が等価", fromYaml.size(), is(fromXls.size()));
@@ -407,7 +421,7 @@ public class ExcelToYamlEquivalenceTest {
     // =========================================================================
 
     /**
-     * Given: BasicTestDataParserTest/withoutGroupId.yaml が配置されている（BLOB_COL に ${binaryFile:...} を含む）<br>
+     * Given: BasicTestDataParserTest/withoutGroupId.yaml を、テストの実行時に .xls から変換している（BLOB_COL に ${binaryFile:...} を含む）<br>
      * When:  YamlTestDataParser で getExpectedTableData() を呼ぶ<br>
      * Then:  ${binaryFile:...} インタープリタが Excel と YAML の両方で同一の HexString に変換される
      */
@@ -416,7 +430,7 @@ public class ExcelToYamlEquivalenceTest {
         // Given: @Before で xlsParser・yamlParser が初期化済み
         // When
         List<TableData> fromXls = xlsParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
-        List<TableData> fromYaml = yamlParser.getExpectedTableData(DIR, "BasicTestDataParserTest/withoutGroupId");
+        List<TableData> fromYaml = yamlParser.getExpectedTableData(YAML_DIR, "BasicTestDataParserTest/withoutGroupId");
 
         // Then: EXPECTED_TABLE 1件目 1行目: BLOB_COL = ${binaryFile:testdata.txt}
         String xlsBlobVal = fromXls.get(0).getValue(0, "BLOB_COL").toString();

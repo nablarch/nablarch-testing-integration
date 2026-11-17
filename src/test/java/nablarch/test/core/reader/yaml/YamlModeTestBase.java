@@ -114,19 +114,7 @@ public final class YamlModeTestBase {
         Path yamlClassDir = outputDir.resolve(yamlClassName);
         deleteDirectory(yamlClassDir);
 
-        ConversionRequest.Builder builder = new ConversionRequest.Builder()
-                .sourceFormat(DataFormat.XLS)
-                .targetFormat(DataFormat.YAML)
-                .inputPath(inputDir)
-                .outputPath(outputDir)
-                .overwrite(true)
-                .include(baseName + ".xls")
-                .include(baseName + ".xlsx");
-        for (String sheet : excludeSheets) {
-            builder.excludeSheet(sheet);
-        }
-        ConversionRequest request2 = builder.build();
-        int converted = TestDataConverter.convert(request2);
+        int converted = convert(inputDir, outputDir, excludeSheets, baseName + ".xls", baseName + ".xlsx");
         if (converted == 0) {
             throw new IllegalStateException(
                     "Excel not found for " + baseName + " under " + inputDir
@@ -142,6 +130,52 @@ public final class YamlModeTestBase {
         // 入力ディレクトリ直下の非 Excel/非 Java ファイルを YAML 出力ディレクトリにコピーする
         // （resource-root が YAML ディレクトリ優先のため、付随ファイルもそこに存在する必要がある）。
         copyAuxiliaryFiles(inputDir, outputDir);
+    }
+
+    /**
+     * Excel のブックを 1 つ、ファイル名を指定して YAML に変換する。
+     *
+     * <p>
+     * テストクラスと対にならない Excel（例: 変換前後の一致を確かめるテストが使う
+     * {@code BasicTestDataParserTest.xls}）を、テストの実行時に変換するために使う。
+     * 変換結果は {@code outputDir/<ブック名>/<シート名>.yaml} に出力する。
+     * </p>
+     *
+     * @param inputDir         変換元の Excel を置いたディレクトリ
+     * @param workbookFileName 変換元の Excel のファイル名（例: {@code BasicTestDataParserTest.xls}）
+     * @param outputDir        変換先のディレクトリ
+     * @throws IllegalStateException 変換元の Excel が見つからない場合
+     */
+    public static void convertWorkbook(Path inputDir, String workbookFileName, Path outputDir) {
+        int converted = convert(inputDir, outputDir, new String[0], workbookFileName);
+        if (converted == 0) {
+            throw new IllegalStateException("Excel not found: " + inputDir.resolve(workbookFileName));
+        }
+    }
+
+    /**
+     * 変換ツールで、指定したファイル名の Excel を YAML に変換する。
+     *
+     * @param inputDir      変換元の Excel を置いたディレクトリ
+     * @param outputDir     変換先のディレクトリ
+     * @param excludeSheets 変換の対象外にするシート名
+     * @param fileNames     変換元の Excel のファイル名
+     * @return 変換したブックの数
+     */
+    private static int convert(Path inputDir, Path outputDir, String[] excludeSheets, String... fileNames) {
+        ConversionRequest.Builder builder = new ConversionRequest.Builder()
+                .sourceFormat(DataFormat.XLS)
+                .targetFormat(DataFormat.YAML)
+                .inputPath(inputDir)
+                .outputPath(outputDir)
+                .overwrite(true);
+        for (String fileName : fileNames) {
+            builder.include(fileName);
+        }
+        for (String sheet : excludeSheets) {
+            builder.excludeSheet(sheet);
+        }
+        return TestDataConverter.convert(builder.build());
     }
 
     /**
