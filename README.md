@@ -30,7 +30,8 @@ YAML 版は `@BeforeClass` で `YamlModeTestBase.prepareYamlData()` を呼び出
 | クラス | 確かめること |
 |---|---|
 | `ExcelToYamlEquivalenceTest` | 実行時に `BasicTestDataParserTest.xls` を変換し、Excel を `BasicTestDataParser` で、変換した YAML を `YamlTestDataParser` で読んだ結果（テーブル名・カラム・行数・値）が一致すること |
-| `YamlSchemaValidationTest` | YAML のテストデータが JSON Schema に適合すること |
+
+変換した YAML が JSON Schema に適合することは、別のテストでは確かめていません。nablarch-testing-yaml は YAML を読むたびにスキーマで検証する（違反なら `YamlSchemaValidationException`）ため、YAML 版のテストが変換した YAML を読むことで確かめられます。
 
 ## YAML 版の作り方
 
