@@ -5,7 +5,6 @@ import nablarch.test.core.reader.yaml.YamlModeTestBase;
 import nablarch.test.core.standalone.TestShot;
 import org.junit.Before;
 import org.junit.BeforeClass;
-import org.junit.Test;
 
 /**
  * {@link MessagingReceiveTestSupportTest} を YAML モードで再実行する等価性確認テスト。
@@ -39,17 +38,15 @@ public class MessagingReceiveTestSupportYamlTest extends MessagingReceiveTestSup
         return YamlModeTestBase.wrapForYaml(super.createTestShotAround(testClass), YAML_CONFIG);
     }
 
-    // 親 testUnExtends は createTestShotAround を override できない素の MessagingReceiveTestSupport
-    //   インスタンスを生成するため、YAML 版では匿名サブクラスで wrapForYaml を差し込む必要がある。
-    @Test
+    // 親の testUnExtends は、継承せずに MessagingReceiveTestSupport を生成するため createTestShotAround を上書きできない。
+    //   生成を上書きし、wrapForYaml を差し込む。
     @Override
-    public void testUnExtends() {
-        MessagingReceiveTestSupport support = new MessagingReceiveTestSupport(getClass()) {
+    protected MessagingReceiveTestSupport createUnExtendedSupport() {
+        return new MessagingReceiveTestSupport(getClass()) {
             @Override
             protected TestShot.TestShotAround createTestShotAround(Class<?> testClass) {
                 return YamlModeTestBase.wrapForYaml(super.createTestShotAround(testClass), YAML_CONFIG);
             }
         };
-        support.execute("testUnExtends");
     }
 }

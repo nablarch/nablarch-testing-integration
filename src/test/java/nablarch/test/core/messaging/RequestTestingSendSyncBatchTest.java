@@ -25,6 +25,18 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
     }
 
     /**
+     * テストデータを置いたディレクトリを返す。
+     * <p>
+     * 期待するエラーメッセージにテストデータのパスが含まれるため、テストデータの置き場所が違う YAML 版で上書きする。
+     * </p>
+     *
+     * @return テストデータを置いたディレクトリ
+     */
+    protected String getTestDataDir() {
+        return "src/test/java/nablarch/test/core/messaging";
+    }
+
+    /**
      * バッチ処理でメッセージ同期送信を行うテスト。正常系。
      */
     @Test
@@ -72,7 +84,7 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             fail();
         } catch (AssertionError e) {
             assertEquals(
-                    "number of send message was invalid. expected number=[3], but actual number=[2]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[nablarch.test.core.messaging.RequestTestingSendSyncBatchTest].",
+                    "number of send message was invalid. expected number=[3], but actual number=[2]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[" + getClass().getName() + "].",
                     e.getMessage());
         }
     }
@@ -87,7 +99,7 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             fail();
         } catch (IllegalStateException e) {
             assertEquals(
-                    "number of lines of header and body does not match. number of lines of header=[2], but number of lines of body=[3]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[nablarch.test.core.messaging.RequestTestingSendSyncBatchTest].",
+                    "number of lines of header and body does not match. number of lines of header=[2], but number of lines of body=[3]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[" + getClass().getName() + "].",
                     e.getMessage());
         }
     }
@@ -102,7 +114,7 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             fail();
         } catch (AssertionError e) {
             assertEquals(
-                    "number of send message was invalid. expected number=[1], but actual number=[2]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[nablarch.test.core.messaging.RequestTestingSendSyncBatchTest].",
+                    "number of send message was invalid. expected number=[1], but actual number=[2]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[" + getClass().getName() + "].",
                     e.getMessage());
         }
     }
@@ -117,7 +129,7 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             fail();
         } catch (IllegalStateException e) {
             assertEquals(
-                    "number of lines of header and body does not match. number of lines of header=[2], but number of lines of body=[1]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[nablarch.test.core.messaging.RequestTestingSendSyncBatchTest].",
+                    "number of lines of header and body does not match. number of lines of header=[2], but number of lines of body=[1]. case no=[1], message id=[case6], request id=[RM21AA0101] test class=[" + getClass().getName() + "].",
                     e.getMessage());
         }
     }
@@ -132,7 +144,7 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             fail();
         } catch (IllegalStateException e) {
             assertEquals(
-                    "message was not found. message must be set. case number=[1], message id=[case6], data type=[EXPECTED_REQUEST_HEADER_MESSAGES], path=[src/test/java/nablarch/test/core/messaging], resource name=[RequestTestingSendSyncBatchTest/testAbnormalEnd7].",
+                    "message was not found. message must be set. case number=[1], message id=[case6], data type=[EXPECTED_REQUEST_HEADER_MESSAGES], path=[" + getTestDataDir() + "], resource name=[" + getClass().getSimpleName() + "/testAbnormalEnd7].",
                     e.getMessage());
         }
     }
@@ -147,7 +159,7 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             fail();
         } catch (IllegalStateException e) {
             assertEquals(
-                    "message was not found. message must be set. case number=[1], message id=[case6], data type=[EXPECTED_REQUEST_BODY_MESSAGES], path=[src/test/java/nablarch/test/core/messaging], resource name=[RequestTestingSendSyncBatchTest/testAbnormalEnd8].",
+                    "message was not found. message must be set. case number=[1], message id=[case6], data type=[EXPECTED_REQUEST_BODY_MESSAGES], path=[" + getTestDataDir() + "], resource name=[" + getClass().getSimpleName() + "/testAbnormalEnd8].",
                     e.getMessage());
         }
     }
@@ -166,8 +178,8 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             assertEquals(
                     "message was not found. message must be set. " +
                     "case number=[1], message id=[notExist], data type=[EXPECTED_REQUEST_HEADER_MESSAGES], " +
-                    "path=[src/test/java/nablarch/test/core/messaging], " +
-                    "resource name=[RequestTestingSendSyncBatchTest/testExpectedMessageNotExist1].",
+                    "path=[" + getTestDataDir() + "], " +
+                    "resource name=[" + getClass().getSimpleName() + "/testExpectedMessageNotExist1].",
                     e.getMessage());
         }
     }
@@ -185,7 +197,7 @@ public class RequestTestingSendSyncBatchTest extends BatchRequestTestSupport {
             assertEquals(
                     "message was not found. message must be set. " +
                     "case number=[1], message id=[notExist], data type=[EXPECTED_REQUEST_BODY_MESSAGES], " +
-                    "path=[src/test/java/nablarch/test/core/messaging], resource name=[RequestTestingSendSyncBatchTest/testExpectedMessageNotExist2].",
+                    "path=[" + getTestDataDir() + "], resource name=[" + getClass().getSimpleName() + "/testExpectedMessageNotExist2].",
                     e.getMessage());
         }
     }

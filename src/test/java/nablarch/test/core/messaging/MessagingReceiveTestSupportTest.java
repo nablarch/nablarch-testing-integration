@@ -39,9 +39,20 @@ public class MessagingReceiveTestSupportTest extends MessagingReceiveTestSupport
 
     @Test
     public void testUnExtends() {
-        MessagingReceiveTestSupport support = new MessagingReceiveTestSupport(
-                getClass());
+        MessagingReceiveTestSupport support = createUnExtendedSupport();
         support.execute("testUnExtends");
+    }
+
+    /**
+     * {@link #testUnExtends()} で使う、継承せずに生成した {@link MessagingReceiveTestSupport} を返す。
+     * <p>
+     * YAML 版で、リクエスト単体テストの実行後に YAML 形式用の設定へ戻す処理を差し込むために上書きする。
+     * </p>
+     *
+     * @return {@link MessagingReceiveTestSupport}
+     */
+    protected MessagingReceiveTestSupport createUnExtendedSupport() {
+        return new MessagingReceiveTestSupport(getClass());
     }
 
     @Entity

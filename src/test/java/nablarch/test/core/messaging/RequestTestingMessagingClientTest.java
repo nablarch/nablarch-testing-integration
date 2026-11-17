@@ -56,6 +56,30 @@ public class RequestTestingMessagingClientTest {
         RepositoryInitializer.recreateRepository("nablarch/test/core/messaging/web/web-component-configuration-request-testing.xml");
     }
     
+    /**
+     * 同期送信のテストに使うコンポーネント設定ファイルを返す。
+     * <p>
+     * テストの中でリポジトリを作り直すときに使う。YAML 版で、YAML 形式用の設定に上書きする。
+     * </p>
+     *
+     * @return コンポーネント設定ファイル
+     */
+    protected String getRequestTestingConfig() {
+        return "nablarch/test/core/messaging/web/web-component-configuration-request-testing.xml";
+    }
+
+    /**
+     * {@link #testAssertAsString()} に使うコンポーネント設定ファイルを返す。
+     * <p>
+     * YAML 版で、YAML 形式用の設定に上書きする。
+     * </p>
+     *
+     * @return コンポーネント設定ファイル
+     */
+    protected String getXmlAssertAsStringConfig() {
+        return "nablarch/test/core/messaging/XmlAssertAsStringTest.xml";
+    }
+
     /** テスト実行後にリポジトリを戻す。    */
     @AfterClass
     public static void tearDown() {
@@ -676,7 +700,7 @@ public class RequestTestingMessagingClientTest {
     @Test
     public void testAssertAsString() throws Exception {
         // 今回のテスト用リポジトリ
-        RepositoryInitializer.recreateRepository("nablarch/test/core/messaging/XmlAssertAsStringTest.xml");
+        RepositoryInitializer.recreateRepository(getXmlAssertAsStringConfig());
         
         Map<String, Object> reqrec = createTestRecord();
         
@@ -707,7 +731,7 @@ public class RequestTestingMessagingClientTest {
          RequestTestingMessagingClient.assertSendingMessage(getClass(), "testAssertAsString", "1", "case1");
         
         // リポジトリを元に戻す
-        RepositoryInitializer.recreateRepository("nablarch/test/core/messaging/web/web-component-configuration-request-testing.xml");
+        RepositoryInitializer.recreateRepository(getRequestTestingConfig());
     }
     
     /**
@@ -716,7 +740,7 @@ public class RequestTestingMessagingClientTest {
     @Test
     public void testAssertAsDataRecord() throws Exception {
         // 今回のテスト用リポジトリ
-        RepositoryInitializer.recreateRepository("nablarch/test/core/messaging/web/web-component-configuration-request-testing.xml");
+        RepositoryInitializer.recreateRepository(getRequestTestingConfig());
         
         Map<String, Object> reqrec = createTestRecord();
         
@@ -747,7 +771,7 @@ public class RequestTestingMessagingClientTest {
         RequestTestingMessagingClient.assertSendingMessage(getClass(), "testAssertAsDataRecord", "1", "case1");
         
         // リポジトリを元に戻す
-        RepositoryInitializer.recreateRepository("nablarch/test/core/messaging/web/web-component-configuration-request-testing.xml");
+        RepositoryInitializer.recreateRepository(getRequestTestingConfig());
     }
     
     /**

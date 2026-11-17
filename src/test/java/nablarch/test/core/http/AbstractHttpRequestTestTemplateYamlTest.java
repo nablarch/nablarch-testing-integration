@@ -1,11 +1,6 @@
 package nablarch.test.core.http;
 
-import static org.hamcrest.CoreMatchers.containsString;
-import static org.hamcrest.MatcherAssert.assertThat;
-import static org.junit.Assert.fail;
-
 import nablarch.test.RepositoryInitializer;
-
 import nablarch.test.core.reader.yaml.YamlModeTestBase;
 import org.junit.After;
 import org.junit.Before;
@@ -45,23 +40,15 @@ public class AbstractHttpRequestTestTemplateYamlTest extends AbstractHttpRequest
         return "nablarch/test/core/http/http-test-configuration-with-htmlcheck-format-aware.xml";
     }
 
-    // 本体内で initializeDefaultRepository()（非ラッパー）に戻すため YAML 版では設定が戻る。
-    //   format-aware 設定で再初期化して実テストし、末尾で後続のためデフォルトに戻す。
-    @org.junit.Test
+    // 親は testGetEmptyTestCase でデフォルトのリポジトリ（unit-test.xml）に初期化するため、YAML 版では設定が戻る。
+    //   YAML 形式用の設定で初期化し、終わったら後続のテストのためにデフォルトのリポジトリへ戻す。
     @Override
-    public void testGetEmptyTestCase() {
+    protected void initializeRepositoryForEmptyTestCase() {
         RepositoryInitializer.reInitializeRepository(getTestConfig());
+    }
 
-        target = createDefaultMock();
-        try {
-            // ExcelのLIST_MAP=testCasesは空
-            target.execute("testGetEmptyTestCase");
-            fail();
-        } catch (IllegalStateException e) {
-            assertThat(e.getMessage(), containsString("testShots (LIST_MAP=testShots) must have one or more test " +
-                    "shots"));
-        }
-        // 後続テストのためデフォルトリポジトリに戻す（元テストの initializeDefaultRepository と同じ後始末）
+    @Override
+    protected void restoreRepositoryAfterEmptyTestCase() {
         RepositoryInitializer.initializeDefaultRepository();
     }
 }

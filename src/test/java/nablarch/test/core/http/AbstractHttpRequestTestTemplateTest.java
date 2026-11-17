@@ -302,7 +302,7 @@ public class AbstractHttpRequestTestTemplateTest {
     /** TestCasesが空であった場合、例外が発生すること。 */
     @Test
     public void testGetEmptyTestCase() {
-        RepositoryInitializer.initializeDefaultRepository();
+        initializeRepositoryForEmptyTestCase();
 
         target = createDefaultMock();
         try {
@@ -313,6 +313,27 @@ public class AbstractHttpRequestTestTemplateTest {
             assertThat(e.getMessage(), containsString("testShots (LIST_MAP=testShots) must have one or more test " +
                     "shots"));
         }
+        restoreRepositoryAfterEmptyTestCase();
+    }
+
+    /**
+     * {@link #testGetEmptyTestCase()} の前に、リポジトリを初期化する。
+     * <p>
+     * YAML 版で、YAML 形式用の設定で初期化するように上書きする。
+     * </p>
+     */
+    protected void initializeRepositoryForEmptyTestCase() {
+        RepositoryInitializer.initializeDefaultRepository();
+    }
+
+    /**
+     * {@link #testGetEmptyTestCase()} の後に、リポジトリを戻す。
+     * <p>
+     * Excel 版では、デフォルトのリポジトリで実行しているため何もしない。
+     * YAML 版で、後続のテストのためにデフォルトのリポジトリへ戻すように上書きする。
+     * </p>
+     */
+    protected void restoreRepositoryAfterEmptyTestCase() {
     }
 
     /**
