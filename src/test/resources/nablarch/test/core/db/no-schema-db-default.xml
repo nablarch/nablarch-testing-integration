@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<component-configuration xmlns="http://tis.co.jp/nablarch/component-configuration"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration ../../main/resources/component-configuration.xsd">
+
+  <!-- db接続情報設定ファイル(nablarch.db.schema が null) -->
+  <config-file file="nablarch/test/core/db/no-schema-db.config" />
+  
+  
+
+</component-configuration>

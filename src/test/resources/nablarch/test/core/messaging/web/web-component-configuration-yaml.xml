@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+取引単体テストの同期送信（MockMessagingClient）で、YAML 形式の応答電文を読む設定。
+解説書（取引単体テストの同期送信の設定。YAML形式の場合）のとおりに、messagingTestDataParser を
+YamlTestDataParser にし、sendSyncTestData には拡張子を設定しない。
+応答電文のテストデータは、YAML 版のテストの実行時に messaging/data 配下の Excel を変換して作る。
+-->
+<component-configuration xmlns="http://tis.co.jp/nablarch/component-configuration"
+    xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+    xsi:schemaLocation="http://tis.co.jp/nablarch/component-configuration  ./component-configuration.xsd">
+
+  <import file="nablarch/test/core/messaging/web/web-component-configuration.xml" />
+
+  <!-- テストデータを解析するコンポーネント。文字列増幅（compositeInterpreter）だけを指定する -->
+  <component name="messagingTestDataParser" class="nablarch.test.core.reader.YamlTestDataParser">
+    <property name="interpreters">
+      <list>
+        <component class="nablarch.test.core.util.interpreter.CompositeInterpreter">
+          <property name="interpreters">
+            <list>
+              <component class="nablarch.test.core.util.interpreter.BasicJapaneseCharacterInterpreter"/>
+            </list>
+          </property>
+        </component>
+      </list>
+    </property>
+  </component>
+
+  <!-- 応答電文のテストデータは、変換した YAML の置き場所から読む。sendSyncTestData には拡張子を設定しない -->
+  <component name="filePathSetting" class="nablarch.core.util.FilePathSetting">
+    <property name="basePathSettings">
+      <map>
+        <entry key="format" value="${file.path.format}" />
+        <entry key="sendSyncTestData" value="file:target/generated-test-yaml/nablarch/test/core/messaging/data/" />
+      </map>
+    </property>
+    <property name="fileExtensions">
+      <map>
+        <entry key="format" value="fmt" />
+      </map>
+    </property>
+  </component>
+</component-configuration>
