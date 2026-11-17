@@ -18,3 +18,7 @@ buildNumber.properties
 
 # テスト実行時に生成される一時フォーマット出力
 **/core/messaging/format/format/
+
+# テストの実行時に作られるファイル（nablarch-testing と同じ）
+work/
+tmp/
