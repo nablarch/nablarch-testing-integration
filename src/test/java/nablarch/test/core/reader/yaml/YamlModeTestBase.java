@@ -20,27 +20,25 @@ import java.util.Comparator;
 import java.util.stream.Stream;
 
 /**
- * YAML モードテストを支援するユーティリティ。
+ * YAML 版のテストクラスを支援するユーティリティ。
  *
  * <p>
- * YAML 版テストクラス（{@code XxxYamlTest extends XxxTest}）から呼び出す static メソッドと定数を提供する。
+ * YAML 版のテストクラス（{@code XxxYamlTest extends XxxTest}）から呼び出す static メソッドと定数を提供する。
+ * YAML 版の作り方（型）は README の「YAML 版の作り方」を参照。
  * </p>
  *
- * <p>使い方:</p>
+ * <p>使い方（基本形）:</p>
  * <pre>
  * public class FooYamlTest extends FooTest {
- *     &#64;Rule
- *     public SystemRepositoryResource repositoryResource = new SystemRepositoryResource("unit-test-yaml.xml");
+ *
+ *     &#64;Override
+ *     protected String getTestConfig() {
+ *         return "unit-test-yaml.xml";
+ *     }
  *
  *     &#64;BeforeClass
  *     public static void prepareYaml() {
  *         YamlModeTestBase.prepareYamlData(FooYamlTest.class, FooTest.class);
- *     }
- *
- *     &#64;Before
- *     public void switchToYaml() {
- *         repositoryResource.addComponent("testDataParser", new YamlTestDataParser());
- *         repositoryResource.addComponent("nablarch.test.resource-root", YamlModeTestBase.YAML_ROOT);
  *     }
  * }
  * </pre>
@@ -54,54 +52,60 @@ public final class YamlModeTestBase {
     }
 
     /**
-     * テスト実行前に Excel を YAML に変換し、自クラス名ディレクトリへ複製する。
+     * テストデータの形式を YAML として宣言する（リポジトリの再初期化は行わない）。
      *
      * <p>
-     * YAML 版テストクラスの {@code @BeforeClass} メソッドから呼ぶ。
+     * 独自の {@code @BeforeClass} で YAML 用の設定にリポジトリを作り直したテストが、{@code @Before} から呼ぶ。
      * </p>
-     *
-     * @param concreteClass YAML 版テストクラス自身（自クラス名ディレクトリ名に使用）
-     * @param baseTestClass 変換元 Excel が置かれているテストクラス（Excel 版クラス）
-     */
-    /**
-     * YAML モードへ切り替える共通処理。各 YAML テストの {@code @Before} から呼ぶ。
-     *
-     * <p>テストデータ形式を YAML として設定し（業務スレッドへ {@link InheritableThreadLocal} 経由で継承される）、
-     * 期待形式も YAML として宣言する（{@link nablarch.test.core.reader.FormatAwareTestDataParser} が
-     * 実際の解決形式との不一致を検知できるようにする）。あわせて指定の設定でリポジトリを再初期化する。</p>
-     *
-     * @param repositoryXml YAML モード用のリポジトリ設定ファイル名
-     */
-    /**
-     * テストデータ形式を YAML として設定する（リポジトリ再初期化は行わない）。
-     * 独自の @BeforeClass で YAML 対応設定を recreate 済みのテスト（web 系等）が @Before から呼ぶ。
      */
     public static void markYamlFormat() {
-        nablarch.test.core.reader.TestDataFormat.set(nablarch.test.core.reader.TestDataFormat.YAML);
-        nablarch.test.core.reader.TestDataFormat.setExpected(nablarch.test.core.reader.TestDataFormat.YAML);
-    }
-
-    public static void switchToYaml(String repositoryXml) {
         TestDataFormat.set(TestDataFormat.YAML);
         TestDataFormat.setExpected(TestDataFormat.YAML);
+    }
+
+    /**
+     * テストデータの形式を YAML として宣言し、指定の設定でリポジトリを再初期化する。
+     * 各 YAML 版の {@code @Before} から呼ぶ。
+     *
+     * <p>テストデータの形式は、業務のスレッドへ {@link InheritableThreadLocal} 経由で引き継がれる。
+     * 期待する形式も YAML として宣言するので、{@link nablarch.test.core.reader.FormatAwareTestDataParser} が
+     * 実際に読んだ形式との食い違いを検知できる。</p>
+     *
+     * @param repositoryXml YAML 用のコンポーネント設定ファイル名
+     */
+    public static void switchToYaml(String repositoryXml) {
+        markYamlFormat();
         RepositoryInitializer.reInitializeRepository(repositoryXml);
     }
 
     /**
-     * YAML モードの後始末。各 YAML テストの {@code @After} から呼ぶ。
-     * テストデータ形式の設定をクリアする（次テストへ持ち越さない）。
+     * テストデータの形式の宣言を消す（次のテストへ持ち越さない）。各 YAML 版の {@code @After} から呼ぶ。
      */
     public static void clearYaml() {
         TestDataFormat.clear();
     }
 
+    /**
+     * テストの実行前に、Excel 版のテストデータを YAML に変換し、YAML 版のクラス名のディレクトリへ複製する。
+     *
+     * <p>
+     * YAML 版の {@code @BeforeClass} から呼ぶ。
+     * </p>
+     *
+     * @param concreteClass YAML 版のテストクラス（複製先のディレクトリ名に使う）
+     * @param baseTestClass 変換元の Excel と同名のテストクラス（Excel 版）
+     */
     public static void prepareYamlData(Class<?> concreteClass, Class<?> baseTestClass) {
         prepareYamlData(concreteClass, baseTestClass, new String[0]);
     }
 
     /**
-     * 異常系データ等、中間モデル化できないシートを変換対象から除外して準備する。
-     * @param excludeSheets 変換対象外のシート名
+     * 変換ツールの中間モデルにできないシート（異常系のデータなど）を変換の対象から外して、
+     * {@link #prepareYamlData(Class, Class)} と同じ準備をする。
+     *
+     * @param concreteClass YAML 版のテストクラス（複製先のディレクトリ名に使う）
+     * @param baseTestClass 変換元の Excel と同名のテストクラス（Excel 版）
+     * @param excludeSheets 変換の対象外にするシート名
      */
     public static void prepareYamlData(Class<?> concreteClass, Class<?> baseTestClass, String... excludeSheets) {
         String packagePath = baseTestClass.getPackage().getName().replace('.', '/');
@@ -208,19 +212,27 @@ public final class YamlModeTestBase {
     }
 
     /**
-     * {@code @ClassRule} を使うテストクラス向けに、{@link TestShot.TestShotAround} をラップする。
+     * リクエスト単体テストの実行後に、YAML 用の設定へリポジトリを戻すよう、{@link TestShot.TestShotAround} を包む。
      *
      * <p>
-     * {@link MainForRequestTesting#handle} の finally で {@code revertDefaultRepository()} が呼ばれ
-     * {@code SystemRepository} が unit-test.xml ベースに戻る。このメソッドが返す
-     * {@code TestShotAround} は、{@code createMain()} で返す {@code Main} の {@code handle()} が
-     * 完了した直後に {@code reInitializeRepository(repositoryXml)} を呼び直すことで、
-     * 後続の {@code assertAll()} で YAML 版リポジトリが使われるようにする。
+     * {@link MainForRequestTesting#handle} は、終了時に {@code RepositoryInitializer.revertDefaultRepository()} で
+     * デフォルトの設定（{@code unit-test.xml}）に戻す。このメソッドが返す {@code TestShotAround} は、
+     * {@code createMain()} が返す {@code Main} の {@code handle()} が終わった直後に
+     * {@code reInitializeRepository(repositoryXml)} を呼び直し、後続の検証（{@code assertAll()}）で
+     * YAML 用の設定が使われるようにする。
      * </p>
      *
-     * @param original      元の {@link TestShot.TestShotAround} 実装
-     * @param repositoryXml 差し替え先リポジトリ XML（例: {@code "unit-test-yaml.xml"}）
-     * @return ラップされた {@link TestShot.TestShotAround}
+     * <p>
+     * これは本体の不具合への対処ではない。利用者のプロジェクトでは {@code unit-test.xml} 自体に YAML 形式用の
+     * {@code testDataParser} を設定するため（解説書「テストデータの形式をYAMLに変更する」）、デフォルトの設定に
+     * 戻っても YAML のままである。本リポジトリは Excel 用と YAML 用の設定を同じクラスパスに置き、
+     * {@code unit-test.xml} を Excel 用にしているため、YAML 版でだけこの処理が要る。
+     * 本体の {@link MainForRequestTesting} がデフォルトの設定へ戻す動作を変えた場合は、このメソッドを見直す。
+     * </p>
+     *
+     * @param original      元の {@link TestShot.TestShotAround}
+     * @param repositoryXml 戻す先の YAML 用のコンポーネント設定ファイル名（例: {@code "unit-test-yaml.xml"}）
+     * @return 包んだ {@link TestShot.TestShotAround}
      */
     public static TestShot.TestShotAround wrapForYaml(
             TestShot.TestShotAround original, String repositoryXml) {

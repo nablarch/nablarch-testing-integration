@@ -25,9 +25,9 @@ public class MessagingReceiveTestSupportYamlTest extends MessagingReceiveTestSup
                 MessagingReceiveTestSupportTest.class);
     }
 
-    // FIXME: Main 実行が RepositoryInitializer 経由でグローバル SystemRepository を unit-test.xml に
-    //   戻すため、setup と wrapForYaml で YAML 版設定を再適用して打ち消している（対症療法）。
-    //   本来は RepositoryInitializer のグローバル汚染を根本で断つのがあるべき姿（released 本体変更を伴う）。
+    // リクエスト単体テストは、実行後にリポジトリをデフォルトの設定（unit-test.xml。本リポジトリでは Excel 用）へ戻す。
+    //   YAML 用の設定で流すため、テストの前（@Before）と Main の実行後（wrapForYaml）に YAML 用の設定へ切り替える。
+    //   本体の不具合ではなく、本リポジトリが両形式の設定を同じクラスパスに置くために要る処理（YamlModeTestBase#wrapForYaml 参照）。
     @Before
     public void switchToYaml() {
         RepositoryInitializer.reInitializeRepository(YAML_CONFIG);

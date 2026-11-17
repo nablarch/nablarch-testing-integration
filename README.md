@@ -74,6 +74,8 @@ Excel と YAML の両方のデータを読む設定（`unit-test-format-aware.xm
 
 親がリクエスト単体テスト（`TestShot` で `Main` を実行するもの）を流す場合は、`createTestShotAround` を上書きし、`YamlModeTestBase.wrapForYaml(...)` で包みます。リクエスト単体テストは、実行後にリポジトリを `unit-test.xml`（本リポジトリでは Excel 用の設定）へ戻すため、そのあとの検証で YAML 用の設定に戻す必要があります。
 
+これは本体の不具合への対処ではありません。利用者のプロジェクトでは `unit-test.xml` 自体に YAML 形式用の `testDataParser` を設定するので、デフォルトの設定に戻っても YAML のままです。本リポジトリが Excel 用と YAML 用の設定を同じクラスパスに置き、`unit-test.xml` を Excel 用にしているために要る処理です。本体の `MainForRequestTesting` がデフォルトの設定へ戻す動作を変えた場合は、`wrapForYaml` を見直してください。
+
 ### 型 4: 親が `@ClassRule`（static）で設定を作る
 
 static のフィールドは上書きできないため、`getTestConfig()` は効きません。`@Before` で `RepositoryInitializer.reInitializeRepository(設定ファイル名)` を呼んで YAML 用の設定に切り替えるか、同名の `@ClassRule` を YAML 版で宣言し直します。
@@ -156,6 +158,14 @@ surefire で、テストクラスごとに JVM を分けています（`reuseFor
 ```bash
 mvn test -Dtest=TestSupportYamlTest
 ```
+
+## 今後の課題
+
+### テストの構成の見直し
+
+今の構成は、Excel 版と YAML 版の設定を同じクラスパスに置き、YAML 版のサブクラスで設定を切り替えています。このため、YAML 版のサブクラス、Excel 版の `getTestConfig()` などの変更、`wrapForYaml`、`FormatAwareTestDataParser` といった、本リポジトリ独自の仕組みが要ります。
+
+同じテストクラスを、Excel 用と YAML 用の 2 回、それぞれ別の `unit-test.xml` で実行する構成（surefire の実行を 2 つに分ける、またはモジュールを分ける。YAML 用の実行の前に、変換ツールの Maven プラグインでテストデータを変換する）にすれば、これらは不要になります。利用者のプロジェクトと同じ構成で確かめられ、本体のテストを写し直すだけで追従できるようになります。テストの中で設定ファイル名やパスを直接書いている箇所、`@Ignore` の扱いを確かめる必要があるため、試作してから判断します。
 
 ## 依存関係
 
